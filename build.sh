@@ -101,7 +101,7 @@ fi
 # compile executable
 echo "Building executable..."
 startTime=$(date +%s%N)
-gcc -Wall -Wextra -Wno-unused-parameter src/main.c$OBJECTS$INCLUDES$LIBS$LINKS -o build/a.out $PROD
+gcc -Wall -Wextra -Wno-unused-parameter test/main.c$OBJECTS$INCLUDES$LIBS$LINKS -o build/a.out $PROD
 if [ $? -ne 0 ]; then
 	echo -e "Build \033[31mFailed\033[0m"
 	exit 1

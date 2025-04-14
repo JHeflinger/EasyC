@@ -102,7 +102,7 @@ if %SOURCES_UP_TO_DATE%=="true" (
 :: compile executable
 echo Building executable...
 set "startTime=%time: =0%"
-gcc -Wall -Wextra -Wno-unused-parameter src/main.c%OBJECTS%%INCLUDES%%LIBS%%LINKS% -o build/a.out.exe %PROD%
+gcc -Wall -Wextra -Wno-unused-parameter test/main.c%OBJECTS%%INCLUDES%%LIBS%%LINKS% -o build/a.out.exe %PROD%
 if !ERRORLEVEL! NEQ 0 (
     echo Build [31mFailed[0m with error code !ERRORLEVEL!
     exit /b !ERRORLEVEL!
