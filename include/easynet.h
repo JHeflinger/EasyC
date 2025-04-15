@@ -15,11 +15,13 @@ typedef struct {
 
 EZ_BUFFER* ez_generate_buffer(size_t size);
 void ez_clean_buffer(EZ_BUFFER* buffer);
-void ez_translate_buffer(EZ_BUFFER* buffer, void* destination);
+BOOL ez_translate_buffer(EZ_BUFFER* buffer, void* destination, size_t destsize);
+BOOL ez_record_buffer(EZ_BUFFER* buffer, void* source, size_t sourcesize);
 
 #define EZ_GENERATE_BUFFER(size) ez_generate_buffer(size)
 #define EZ_CLEAN_BUFFER(buffer) ez_clean_buffer(buffer)
-#define EZ_TRANSLATE_BUFFER(buffer, destination) ez_translate_buffer(buffer, (void*)destination)
+#define EZ_TRANSLATE_BUFFER(buffer, destination) ez_translate_buffer(buffer, (void*)destination, sizeof(destination))
+#define EZ_RECORD_BUFFER(buffer, source), ez_record_buffer(buffer, (void*)source, sizeof(source));
 
 #ifdef __linux__
 
