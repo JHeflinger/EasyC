@@ -15,12 +15,13 @@
 #define EZ_CYAN "\033[36m"
 
 #define EZ_INFO(...)  {printf("%s[INFO]%s  ", EZ_GREEN, EZ_RESET);  printf(__VA_ARGS__); printf("\n");}
+#define EZ_ERROR(...) {printf("%s[ERROR]%s Error detected in %s:%d - \"", EZ_RED, EZ_RESET, __FILE__, __LINE__); printf(__VA_ARGS__); printf("\"\n");}
 #define EZ_FATAL(...) {printf("%s[FATAL]%s Critical failure in %s:%d - \"", EZ_RED, EZ_RESET, __FILE__, __LINE__); printf(__VA_ARGS__); printf("\"\n"); exit(1);}
 #define EZ_WARN(...)  {printf("%s[WARN]%s  ", EZ_YELLOW, EZ_RESET); printf(__VA_ARGS__); printf("\n");}
 #define EZ_DEBUG(...) {printf("%s[DEBUG]%s ", EZ_BLUE, EZ_RESET);   printf(__VA_ARGS__); printf("\n");}
 #define EZ_CUSTOM(precursor, ...) {printf("%s[%s]%s  ", EZ_CYAN, precursor, EZ_RESET);   printf(__VA_ARGS__); printf("\n");}
 #define EZ_SCAN(...)  {printf("%s[INPUT]%s ", EZ_PURPLE, EZ_RESET); scanf(__VA_ARGS__);}
-#define EZ_ASSERT(x, ...) if (!(x)) { printf("%s[FAIL]%s  Assertion failed in %s:%d - \"", EZ_RED, EZ_RESET, __FILE__, __LINE__); printf(__VA_ARGS__); printf("\"\n"); exit(0); }
+#define EZ_ASSERT(x, ...) if (!(x)) { printf("%s[FAIL]%s  Assertion failed in %s:%d - \"", EZ_RED, EZ_RESET, __FILE__, __LINE__); printf(__VA_ARGS__); printf("\"\n"); exit(1);}
 
 #else
 

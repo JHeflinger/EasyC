@@ -5,5 +5,6 @@
 #include "easyobjects.h"
 #include "easymemory.h"
 #include "easythreads.h"
+#include "easynet.h"
 
 #endif
