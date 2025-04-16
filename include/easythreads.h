@@ -10,7 +10,6 @@ typedef pthread_mutex_t EZ_MUTEX;
 
 #define EZ_CREATE_THREAD(thread, func, parameters) pthread_create(&thread, NULL, (void* (*)(void*))func, parameters)
 #define EZ_WAIT_THREAD(thread) pthread_join(thread, NULL)
-#define EZ_CLOSE_THREAD(thread)
 #define EZ_CREATE_MUTEX(mutex) pthread_mutex_init(&mutex, NULL)
 #define EZ_LOCK_MUTEX(mutex) pthread_mutex_lock(&mutex)
 #define EZ_RELEASE_MUTEX(mutex) pthread_mutex_unlock(&mutex)
@@ -64,7 +63,6 @@ typedef HANDLE EZ_MUTEX;
 
 #define EZ_CREATE_THREAD(thread, func, parameters) thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)func, (LPVOID)parameters, 0, NULL)
 #define EZ_WAIT_THREAD(thread) WaitForSingleObject(thread, INFINITE)
-#define EZ_CLOSE_THREAD(thread) CloseHandle(thread)
 #define EZ_CREATE_MUTEX(mutex) mutex = CreateMutex(NULL, FALSE, NULL)
 #define EZ_LOCK_MUTEX(mutex) WaitForSingleObject(mutex, INFINITE)
 #define EZ_RELEASE_MUTEX(mutex) ReleaseMutex(mutex)
