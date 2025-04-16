@@ -4,7 +4,7 @@
 #include <string.h>
 
 BOOL s_ez_network_initialized = FALSE;
-ez_ClientList* s_ez_client_list = NULL; //TODO: integrate these
+ez_ClientList* s_ez_client_list = NULL;
 ez_ServerList* s_ez_server_list = NULL;
 
 EZ_BUFFER* ez_generate_buffer(size_t size) {
@@ -66,6 +66,20 @@ BOOL ez_clean_network() {
 	#elifndef __linux__
 	#error "Unsupported operating system detected"
 	#endif
+	while (s_ez_server_list != NULL) {
+		BOOL res = ez_clean_server(s_ez_server_list->server);
+		if (!res) {
+			EZ_ERROR("Unable to clean servers");
+			return FALSE;
+		}
+	}
+	while (s_ez_client_list != NULL) {
+		BOOL res = ez_clean_client(s_ez_client_list->client);
+		if (!res) {
+			EZ_ERROR("Unable to clean clients");
+			return FALSE;
+		}
+	}
 	s_ez_network_initialized = FALSE;
 	return TRUE;
 }
@@ -144,7 +158,7 @@ BOOL ez_close_server(ez_Server* server) {
 		EZ_ERROR("Cannot close a server that isn't already open");
 		return FALSE;
 	}
-	// TODO: close properly by going through tracked servers
+	EZ_CLOSE_SOCKET(server->socket);
 	server->open = FALSE;
 	return TRUE;
 }
@@ -154,7 +168,27 @@ BOOL ez_clean_server(ez_Server* server) {
 		EZ_ERROR("Cannot clean a null pointer");
 		return FALSE;
 	}
-	// TODO: clean properly by going through tracked servers
+	ez_ServerList* tracker = s_ez_server_list;
+	if (tracker->server == server) {
+		s_ez_server_list = tracker->next;
+		if (tracker->server->open) ez_close_server(tracker->server);
+		EZ_FREE(tracker->server);
+		EZ_FREE(tracker);
+	} else {
+		while (tracker->next != NULL) {
+			if (((ez_ServerList*)tracker->next)->server == server) {
+				ez_ServerList* dead = tracker->next;
+				tracker->next = ((ez_ServerList*)tracker->next)->next;
+				if (dead->server->open) ez_close_server(dead->server);
+				EZ_FREE(dead->server);
+				EZ_FREE(dead);
+				return TRUE;
+			}
+			tracker = tracker->next;
+		}
+		EZ_WARN("Unable to clean an untracked server object - please use the dedicated EZ_GENERATE_SERVER() function to create server objects");
+		return FALSE;
+	}
 	return TRUE;
 }
 
@@ -279,7 +313,7 @@ BOOL ez_disconnect_client(ez_Client* client) {
 		EZ_ERROR("Cannot disconnect a client that isn't already connected");
 		return FALSE;
 	}
-	// TODO: close properly by going through tracked clients
+	EZ_CLOSE_SOCKET(client->socket);
 	client->open = FALSE;
 	return TRUE;
 }
@@ -289,7 +323,27 @@ BOOL ez_clean_client(ez_Client* client) {
 		EZ_ERROR("Cannot clean a null pointer");
 		return FALSE;
 	}
-	// TODO: clean properly by going through tracked clients
+	ez_ClientList* tracker = s_ez_client_list;
+	if (tracker->client == client) {
+		s_ez_client_list = tracker->next;
+		if (tracker->client->open) ez_disconnect_client(tracker->client);
+		EZ_FREE(tracker->client);
+		EZ_FREE(tracker);
+	} else {
+		while (tracker->next != NULL) {
+			if (((ez_ClientList*)tracker->next)->client == client) {
+				ez_ClientList* dead = tracker->next;
+				tracker->next = ((ez_ClientList*)tracker->next)->next;
+				if (dead->client->open) ez_disconnect_client(dead->client);
+				EZ_FREE(dead->client);
+				EZ_FREE(dead);
+				return TRUE;
+			}
+			tracker = tracker->next;
+		}
+		EZ_WARN("Unable to clean an untracked client object - please use the dedicated EZ_GENERATE_CLIENT() function to create client objects");
+		return FALSE;
+	}
 	return TRUE;
 }
 
