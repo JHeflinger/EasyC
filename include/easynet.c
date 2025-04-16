@@ -6,16 +6,17 @@
 BOOL s_ez_network_initialized = FALSE;
 ez_ClientList* s_ez_client_list = NULL;
 ez_ServerList* s_ez_server_list = NULL;
+ez_ConnectionList* s_ez_connection_list = NULL;
 
-EZ_BUFFER* ez_generate_buffer(size_t size) {
-	EZ_BUFFER* buffer = EZ_ALLOC(1, sizeof(EZ_BUFFER));
+ez_Buffer* ez_generate_buffer(size_t size) {
+	ez_Buffer* buffer = EZ_ALLOC(1, sizeof(ez_Buffer));
 	buffer->bytes = EZ_ALLOC(size, sizeof(EZ_BYTE));
 	buffer->max_length = size;
 	buffer->current_length = 0;
 	return buffer;
 }
 
-void ez_clean_buffer(EZ_BUFFER* buffer) {
+void ez_clean_buffer(ez_Buffer* buffer) {
 	if (buffer != NULL) {
 		if (buffer->bytes != NULL) {
 			EZ_FREE(buffer->bytes);
@@ -28,7 +29,7 @@ void ez_clean_buffer(EZ_BUFFER* buffer) {
 	}
 }
 
-BOOL ez_translate_buffer(EZ_BUFFER* buffer, void* destination, size_t destsize) {
+BOOL ez_translate_buffer(ez_Buffer* buffer, void* destination, size_t destsize) {
 	if (buffer->current_length > destsize) {
 		EZ_ERROR("Cannot translate buffer to a smaller size destination");
 		return FALSE;
@@ -37,12 +38,14 @@ BOOL ez_translate_buffer(EZ_BUFFER* buffer, void* destination, size_t destsize) 
 	return TRUE;
 }
 
-BOOL ez_record_buffer(EZ_BUFFER* buffer, void* source, size_t sourcesize) {
+BOOL ez_record_buffer(ez_Buffer* buffer, void* source, size_t sourcesize) {
 	if (buffer->max_length < sourcesize) {
 		EZ_ERROR("Cannot translate source to a smaller size buffer");
 		return FALSE;
 	}
+	buffer->current_length = sourcesize;
 	memcpy(buffer->bytes, source, sourcesize);
+	memset(buffer->bytes + sourcesize, 0, buffer->max_length - sourcesize);
 	return TRUE;
 }
 
@@ -77,6 +80,13 @@ BOOL ez_clean_network() {
 		BOOL res = ez_clean_client(s_ez_client_list->client);
 		if (!res) {
 			EZ_ERROR("Unable to clean clients");
+			return FALSE;
+		}
+	}
+	while (s_ez_connection_list != NULL) {
+		BOOL res = ez_close_connection(s_ez_connection_list->connection);
+		if (!res) {
+			EZ_ERROR("Unable to clean connections");
 			return FALSE;
 		}
 	}
@@ -152,6 +162,63 @@ BOOL ez_open_server(ez_Server* server, uint16_t port) {
 	return TRUE;
 }
 
+ez_Connection* ez_server_accept(ez_Server* server) {
+	ez_Connection* connection = EZ_ALLOC(1, sizeof(ez_Connection));
+	ez_check_network();
+    if (!server->open) {
+        EZ_WARN("Unable to accept connections on a server that is not open!");
+        return NULL;
+    }
+    EZ_SOCKET clientSocket;
+    clientSocket = accept(server->socket, NULL, NULL);
+    if (clientSocket == EZ_INVALID_SOCK) {
+        EZ_ERROR("Failed to accept a connection");
+        return NULL;
+    }
+	connection->socket = clientSocket;
+	connection->server = server;
+	if (s_ez_connection_list == NULL) {
+		s_ez_connection_list = EZ_ALLOC(1, sizeof(ez_ConnectionList));
+		s_ez_connection_list->connection = connection;
+		s_ez_connection_list->next = NULL;
+	} else {
+		ez_ConnectionList* t = s_ez_connection_list;
+		s_ez_connection_list = EZ_ALLOC(1, sizeof(ez_ConnectionList));
+		s_ez_connection_list->connection = connection;
+		s_ez_connection_list->next = t;
+	}
+    return connection;
+}
+
+BOOL ez_close_connection(ez_Connection* connection) {
+	if (connection == NULL) {
+		EZ_ERROR("Cannot clean a null pointer");
+		return FALSE;
+	}
+	ez_ConnectionList* tracker = s_ez_connection_list;
+	if (tracker->connection == connection) {
+		s_ez_connection_list = tracker->next;
+		EZ_CLOSE_SOCKET(tracker->connection->socket);
+		EZ_FREE(tracker->connection);
+		EZ_FREE(tracker);
+	} else {
+		while (tracker->next != NULL) {
+			if (((ez_ConnectionList*)tracker->next)->connection == connection) {
+				ez_ConnectionList* dead = tracker->next;
+				tracker->next = ((ez_ConnectionList*)tracker->next)->next;
+				EZ_CLOSE_SOCKET(dead->connection->socket);
+				EZ_FREE(dead->connection);
+				EZ_FREE(dead);
+				return TRUE;
+			}
+			tracker = tracker->next;
+		}
+		EZ_WARN("Unable to clean an untracked connection object - please use the dedicated EZ_SERVER_ACCPET() function to get connection objects");
+		return FALSE;
+	}
+	return TRUE;
+}
+
 BOOL ez_close_server(ez_Server* server) {
 	ez_check_network();
 	if (!server->open) {
@@ -192,31 +259,27 @@ BOOL ez_clean_server(ez_Server* server) {
 	return TRUE;
 }
 
-BOOL ez_server_ask(ez_Server* server, EZ_BUFFER* buffer) {
+BOOL ez_server_ask(ez_Connection* connection, ez_Buffer* buffer) {
 	ez_check_network();
 	#ifdef _WIN32
     unsigned long l;
-    ioctlsocket(server->socket, FIONREAD, &l);
+    ioctlsocket(connection->socket, FIONREAD, &l);
     if (l > 0) {
-		int64_t recbytes = recv(server->socket, (char*)buffer->bytes, buffer->max_length, 0);
-		if (recbytes < 0) {
-			EZ_WARN("An error occured while recieving data");
-			buffer->current_length = (size_t)-1;
+		int64_t recbytes = recv(connection->socket, (char*)buffer->bytes, buffer->max_length, 0);
+		if (recbytes <= 0) {
+			buffer->current_length = 0;
 			return FALSE;
 		}
-		if (recbytes == 0) return FALSE;
 		buffer->current_length = (size_t)recbytes;
 		return TRUE;
 	}
 	return FALSE;
     #elif __linux__	
-	ssize_t retval = recv(server->socket, (char*)buffer->bytes, buffer->max_length, MSG_DONTWAIT);
-	if (retval < 0) {
-		EZ_WARN("An error occured while recieving data");
-		buffer->current_length = (size_t)-1;
+	ssize_t retval = recv(connection->socket, (char*)buffer->bytes, buffer->max_length, MSG_DONTWAIT);
+	if (retval <= 0) {
+		buffer->current_length = 0;
 		return FALSE;
 	}
-	if (retval == 0) return FALSE;
 	buffer->current_length = (size_t)retval;
 	return TRUE;
 	#else
@@ -224,9 +287,9 @@ BOOL ez_server_ask(ez_Server* server, EZ_BUFFER* buffer) {
     #endif
 }
 
-BOOL ez_server_recieve(ez_Server* server, EZ_BUFFER* buffer) {
+BOOL ez_server_recieve(ez_Connection* connection, ez_Buffer* buffer) {
 	ez_check_network();
-	int64_t retval = recv(server->socket, (char*)buffer->bytes, buffer->max_length, 0);
+	int64_t retval = recv(connection->socket, (char*)buffer->bytes, buffer->max_length, 0);
     if (retval < 0) {
         EZ_WARN("An error occured while recieving data");
         return FALSE;
@@ -236,12 +299,12 @@ BOOL ez_server_recieve(ez_Server* server, EZ_BUFFER* buffer) {
 	return TRUE;
 }
 
-BOOL ez_server_send(ez_Server* server, EZ_BUFFER* buffer) {
+BOOL ez_server_send(ez_Connection* connection, ez_Buffer* buffer) {
 	ez_check_network();
 	#ifdef __linux__
-    int64_t sent = send(server->socket, (char*)buffer->bytes, buffer->current_length, MSG_NOSIGNAL);
+    int64_t sent = send(connection->socket, (char*)buffer->bytes, buffer->current_length, MSG_NOSIGNAL);
 	#else 
-	int64_t sent = send(server->socket, (char*)buffer->bytes, buffer->current_length, 0);
+	int64_t sent = send(connection->socket, (char*)buffer->bytes, buffer->current_length, 0);
 	#endif
     if (sent < 0) {
         EZ_WARN("An error occured while sending data");
@@ -304,6 +367,7 @@ BOOL ez_connect_client(ez_Client* client, Ipv4 address, uint16_t port) {
 		EZ_CLOSE_SOCKET(client->socket);
 		return FALSE;
 	}
+	client->open = TRUE;
 	return TRUE;
 }
 
@@ -347,31 +411,27 @@ BOOL ez_clean_client(ez_Client* client) {
 	return TRUE;
 }
 
-BOOL ez_client_ask(ez_Client* client, EZ_BUFFER* buffer) {
+BOOL ez_client_ask(ez_Client* client, ez_Buffer* buffer) {
 	ez_check_network();
 	#ifdef _WIN32
     unsigned long l;
     ioctlsocket(client->socket, FIONREAD, &l);
     if (l > 0) {
 		int64_t recbytes = recv(client->socket, (char*)buffer->bytes, buffer->max_length, 0);
-		if (recbytes < 0) {
-			EZ_WARN("An error occured while recieving data");
-			buffer->current_length = (size_t)-1;
+		if (recbytes <= 0) {
+			buffer->current_length = 0;
 			return FALSE;
 		}
-		if (recbytes == 0) return FALSE;
 		buffer->current_length = (size_t)recbytes;
 		return TRUE;
 	}
 	return FALSE;
     #elif __linux__	
 	ssize_t retval = recv(client->socket, (char*)buffer->bytes, buffer->max_length, MSG_DONTWAIT);
-	if (retval < 0) {
-		EZ_WARN("An error occured while recieving data");
-		buffer->current_length = (size_t)-1;
+	if (retval <= 0) {
+		buffer->current_length = 0;
 		return FALSE;
 	}
-	if (retval == 0) return FALSE;
 	buffer->current_length = (size_t)retval;
 	return TRUE;
 	#else
@@ -379,7 +439,7 @@ BOOL ez_client_ask(ez_Client* client, EZ_BUFFER* buffer) {
     #endif
 }
 
-BOOL ez_client_recieve(ez_Client* client, EZ_BUFFER* buffer) {
+BOOL ez_client_recieve(ez_Client* client, ez_Buffer* buffer) {
 	ez_check_network();
 	int64_t retval = recv(client->socket, (char*)buffer->bytes, buffer->max_length, 0);
     if (retval < 0) {
@@ -391,7 +451,7 @@ BOOL ez_client_recieve(ez_Client* client, EZ_BUFFER* buffer) {
 	return TRUE;
 }
 
-BOOL ez_client_send(ez_Client* client, EZ_BUFFER* buffer) {
+BOOL ez_client_send(ez_Client* client, ez_Buffer* buffer) {
 	ez_check_network();
 	#ifdef __linux__
     int64_t sent = send(client->socket, (char*)buffer->bytes, buffer->current_length, MSG_NOSIGNAL);

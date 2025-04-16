@@ -25,6 +25,13 @@ typedef struct {
 	EZ_MUTEX mutex;
 } Params;
 
+typedef struct {
+	int32_t a;
+	char b;
+	float c;
+	uint32_t d;
+} Packet;
+
 void* thread_function(void* params) {
 	Params* p = (Params*)params;
 	*(p->sum) = p->a + p->b;
@@ -79,7 +86,7 @@ int main() {
 	EZTEST(list.maxsize == 8, "List maintained capacity");
 	EZTEST(ARRLIST_int_get(&list, 2) == 6, "List get");
 	ARRLIST_int_clear(&list);
-	EZTEST(list.size == 0, "List clear size");
+EZTEST(list.size == 0, "List clear size");
 	EZTEST(list.maxsize == 0, "List clear capacity");
 	ARRLIST_intPtr nlist = { 0 };
 	EZTEST(nlist.size == 0, "Empty named list");
@@ -125,9 +132,56 @@ int main() {
 	EZTEST(sum == 1234, "Unsafe threads");
 	
 	// easynet tests
-	// TODO:
+	size_t en_allocated = EZ_ALLOCATED();
+	ez_Buffer* buf = EZ_GENERATE_BUFFER(1024);
+	Packet packet = { -123, 'z', 69.0f, UINT32_MAX };
+	EZTEST(buf->max_length == 1024, "Generate buffer max size");
+	EZTEST(buf->current_length == 0, "Empty buffer");
+	EZTEST(EZ_RECORD_BUFFER(buf, &packet), "Record buffer success");
+	EZTEST(buf->current_length == sizeof(Packet), "Record buffer size");
+	int count = 1023;
+	while (buf->bytes[count] == 0) {
+		count--;
+	}
+	EZTEST(count + 1 == sizeof(Packet), "Real buffer size");
+	Packet affirm = { 0 };
+	EZTEST(EZ_TRANSLATE_BUFFER(buf, &affirm), "Translate buffer success");
+	EZTEST(affirm.a == -123 && affirm.b == 'z' && affirm.c == 69.0f && affirm.d == UINT32_MAX, "Translate buffer data");
+	EZTEST(EZ_INIT_NETWORK(), "Initialize network");
+	ez_Server* server = EZ_GENERATE_SERVER();
+	ez_Client* client = EZ_GENERATE_CLIENT();
+	Ipv4 address = {{127, 0, 0, 1}};
+	ez_Buffer* retbuf = EZ_GENERATE_BUFFER(1024);
+	EZTEST(EZ_OPEN_SERVER(server, 55000), "Open server");
+	EZTEST(EZ_CONNECT_CLIENT(client, address, 55000), "Connect client");
+	ez_Connection* connection = EZ_SERVER_ACCEPT(server);
+	EZTEST(connection != NULL, "Accepted client");
+	EZTEST(!EZ_SERVER_ASK(connection, retbuf), "Non blocking server recieve failure");
+	EZTEST(EZ_CLIENT_SEND(client, buf), "Client send");
+	EZTEST(EZ_SERVER_ASK(connection, retbuf), "Non blocking server recieve success");
+	EZTEST(memcmp(buf->bytes, retbuf->bytes, buf->max_length) == 0, "Successful byte transfer 1");
+	memset(retbuf->bytes, 0, retbuf->max_length);
+	EZ_CLIENT_SEND(client, buf);
+	EZTEST(EZ_SERVER_RECIEVE(connection, retbuf), "Blocking server recieve");
+	EZTEST(memcmp(buf->bytes, retbuf->bytes, buf->max_length) == 0, "Successful byte transfer 2");
+	memset(retbuf->bytes, 0, retbuf->max_length);
+	EZTEST(!EZ_CLIENT_ASK(client, retbuf), "Non blocking client recieve failure");
+	EZTEST(EZ_SERVER_SEND(connection, buf), "Server send");
+	EZTEST(EZ_CLIENT_ASK(client, retbuf), "Non blocking client recieve success");
+	EZTEST(memcmp(buf->bytes, retbuf->bytes, buf->max_length) == 0, "Successful byte transfer 3");
+	memset(retbuf->bytes, 0, retbuf->max_length);
+	EZ_SERVER_SEND(connection, buf);
+	EZTEST(EZ_CLIENT_RECIEVE(client, retbuf), "Blocking client recieve");
+	EZTEST(memcmp(buf->bytes, retbuf->bytes, buf->max_length) == 0, "Successful byte transfer 4");
+	EZTEST(EZ_CLOSE_CONNETION(connection), "Close connection");
+	EZTEST(EZ_DISCONNECT_CLIENT(client), "Disconnect client");
+	EZTEST(EZ_CLOSE_SERVER(server), "Close server");
+	EZTEST(EZ_CLEAN_NETWORK(), "Clean network");
+	EZ_CLEAN_BUFFER(buf);
+	EZ_CLEAN_BUFFER(retbuf);
+	EZTEST(en_allocated == EZ_ALLOCATED(), "EasyNet memory leak");
 
-	printf("%s%d%s/%d Tests passed\n", 
+	printf("\nTest suite results: %s%d%s/%d tests passed\n", 
 		passed_tests == total_tests ? EZ_GREEN : EZ_RED, passed_tests, EZ_RESET, total_tests);
 	return 0;
 }

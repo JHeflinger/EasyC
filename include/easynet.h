@@ -11,17 +11,17 @@ typedef struct {
 	EZ_BYTE* bytes;
 	size_t max_length;
 	size_t current_length;
-} EZ_BUFFER;
+} ez_Buffer;
 
-EZ_BUFFER* ez_generate_buffer(size_t size);
-void ez_clean_buffer(EZ_BUFFER* buffer);
-BOOL ez_translate_buffer(EZ_BUFFER* buffer, void* destination, size_t destsize);
-BOOL ez_record_buffer(EZ_BUFFER* buffer, void* source, size_t sourcesize);
+ez_Buffer* ez_generate_buffer(size_t size);
+void ez_clean_buffer(ez_Buffer* buffer);
+BOOL ez_translate_buffer(ez_Buffer* buffer, void* destination, size_t destsize);
+BOOL ez_record_buffer(ez_Buffer* buffer, void* source, size_t sourcesize);
 
 #define EZ_GENERATE_BUFFER(size) ez_generate_buffer(size)
 #define EZ_CLEAN_BUFFER(buffer) ez_clean_buffer(buffer)
-#define EZ_TRANSLATE_BUFFER(buffer, destination) ez_translate_buffer(buffer, (void*)destination, sizeof(destination))
-#define EZ_RECORD_BUFFER(buffer, source), ez_record_buffer(buffer, (void*)source, sizeof(source));
+#define EZ_TRANSLATE_BUFFER(buffer, destination) ez_translate_buffer(buffer, (void*)destination, sizeof(*destination))
+#define EZ_RECORD_BUFFER(buffer, source) ez_record_buffer(buffer, (void*)source, sizeof(*source))
 
 #ifdef __linux__
 
@@ -111,21 +111,30 @@ typedef struct {
 	BOOL open;
 } ez_Server;
 
+typedef struct {
+	ez_Server* server;
+	EZ_SOCKET socket;
+} ez_Connection;
+
 ez_Server* ez_generate_server();
 BOOL ez_open_server(ez_Server* server, uint16_t port);
+ez_Connection* ez_server_accept(ez_Server* server);
+BOOL ez_close_connection(ez_Connection* connection);
 BOOL ez_close_server(ez_Server* server);
 BOOL ez_clean_server(ez_Server* server);
-BOOL ez_server_ask(ez_Server* server, EZ_BUFFER* buffer);
-BOOL ez_server_recieve(ez_Server* server, EZ_BUFFER* buffer);
-BOOL ez_server_send(ez_Server* server, EZ_BUFFER* buffer);
+BOOL ez_server_ask(ez_Connection* connection, ez_Buffer* buffer);
+BOOL ez_server_recieve(ez_Connection* connection, ez_Buffer* buffer);
+BOOL ez_server_send(ez_Connection* connection, ez_Buffer* buffer);
 
 #define EZ_GENERATE_SERVER() ez_generate_server()
 #define EZ_OPEN_SERVER(server, port) ez_open_server(server, port)
+#define EZ_SERVER_ACCEPT(server) ez_server_accept(server)
+#define EZ_CLOSE_CONNETION(connection) ez_close_connection(connection)
 #define EZ_CLOSE_SERVER(server) ez_close_server(server)
 #define EZ_CLEAN_SERVER(server) ez_clean_server(server)
-#define EZ_SERVER_ASK(server, buffer) ez_server_ask(server, buffer)
-#define EZ_SERVER_RECIEVE(server, buffer) ez_server_recieve(server, buffer)
-#define EZ_SERVER_SEND(server, buffer) ez_server_send(server, buffer)
+#define EZ_SERVER_ASK(connection, buffer) ez_server_ask(connection, buffer)
+#define EZ_SERVER_RECIEVE(connection, buffer) ez_server_recieve(connection, buffer)
+#define EZ_SERVER_SEND(connection, buffer) ez_server_send(connection, buffer)
 
 typedef struct {
 	uint8_t address[4];
@@ -142,9 +151,9 @@ ez_Client* ez_generate_client();
 BOOL ez_connect_client(ez_Client* client, Ipv4 address, uint16_t port);
 BOOL ez_disconnect_client(ez_Client* client);
 BOOL ez_clean_client(ez_Client* client);
-BOOL ez_client_ask(ez_Client* client, EZ_BUFFER* buffer);
-BOOL ez_client_recieve(ez_Client* client, EZ_BUFFER* buffer);
-BOOL ez_client_send(ez_Client* client, EZ_BUFFER* buffer);
+BOOL ez_client_ask(ez_Client* client, ez_Buffer* buffer);
+BOOL ez_client_recieve(ez_Client* client, ez_Buffer* buffer);
+BOOL ez_client_send(ez_Client* client, ez_Buffer* buffer);
 
 #define EZ_GENERATE_CLIENT() ez_generate_client()
 #define EZ_CONNECT_CLIENT(client, address, port) ez_connect_client(client, address, port)
@@ -163,5 +172,10 @@ typedef struct {
 	ez_Server* server;
 	void* next;
 } ez_ServerList;
+
+typedef struct {
+	ez_Connection* connection;
+	void* next;
+} ez_ConnectionList;
 
 #endif
