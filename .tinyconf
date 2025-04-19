@@ -1,0 +1,4 @@
+PROJECT test
+MAIN main.c
+INCLUDE include
+SOURCE include
