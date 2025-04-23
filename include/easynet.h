@@ -86,6 +86,7 @@ typedef int EZ_SOCKET;
 
 #include <stdlib.h>
 #include <winsock2.h>
+#include <ws2tcpip.h>
 
 typedef SOCKET EZ_SOCKET;
 

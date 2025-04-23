@@ -53,9 +53,12 @@ BOOL ez_init_network() {
 	#ifdef __WIN32
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2,2), &wsaData) != 0) {
+		s_ez_network_initialized = FALSE;
         EZ_ERROR("Failed to initialize Winsock");
+		return FALSE;
     }
-	return FALSE;
+	s_ez_network_initialized = TRUE;
+	return TRUE;
 	#elifndef __linux__
 	#error "Unsupported operating system detected"
 	#endif
@@ -148,7 +151,7 @@ BOOL ez_open_server(ez_Server* server, uint16_t port) {
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
    serverAddr.sin_port = htons((u_short)(server->port));
-    if (bind(server->socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == EZ_INVALID_SOCK) {
+    if (bind(server->socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == (int)EZ_INVALID_SOCK) {
         EZ_ERROR("Unable to bind server socket");
         EZ_CLOSE_SOCKET(server->socket);
         return FALSE;

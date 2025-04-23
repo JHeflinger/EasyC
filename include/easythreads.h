@@ -8,6 +8,8 @@
 typedef pthread_t EZ_THREAD;
 typedef pthread_mutex_t EZ_MUTEX;
 
+#define EZ_THREAD_RETURN_TYPE void*
+#define EZ_THREAD_PARAMETER_TYPE void*
 #define EZ_CREATE_THREAD(thread, func, parameters) pthread_create(&thread, NULL, (void* (*)(void*))func, parameters)
 #define EZ_WAIT_THREAD(thread) pthread_join(thread, NULL)
 #define EZ_CREATE_MUTEX(mutex) pthread_mutex_init(&mutex, NULL)
@@ -61,9 +63,11 @@ typedef pthread_mutex_t EZ_MUTEX;
 typedef HANDLE EZ_THREAD;
 typedef HANDLE EZ_MUTEX;
 
-#define EZ_CREATE_THREAD(thread, func, parameters) { thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)func, (LPVOID)parameters, 0, NULL) }
+#define EZ_THREAD_RETURN_TYPE DWORD WINAPI
+#define EZ_THREAD_PARAMETER_TYPE LPVOID
+#define EZ_CREATE_THREAD(thread, func, parameters) { thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)func, (LPVOID)parameters, 0, NULL); }
 #define EZ_WAIT_THREAD(thread) WaitForSingleObject(thread, INFINITE)
-#define EZ_CREATE_MUTEX(mutex) { mutex = CreateMutex(NULL, FALSE, NULL) }
+#define EZ_CREATE_MUTEX(mutex) { mutex = CreateMutex(NULL, FALSE, NULL); }
 #define EZ_LOCK_MUTEX(mutex) WaitForSingleObject(mutex, INFINITE)
 #define EZ_RELEASE_MUTEX(mutex) ReleaseMutex(mutex)
 

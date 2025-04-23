@@ -32,18 +32,18 @@ typedef struct {
 	uint32_t d;
 } Packet;
 
-void* thread_function(void* params) {
+EZ_THREAD_RETURN_TYPE thread_function(EZ_THREAD_PARAMETER_TYPE params) {
 	Params* p = (Params*)params;
 	*(p->sum) = p->a + p->b;
-	return NULL;
+	return 0;
 }
 
-void* unsafe_function(void* params) {
+EZ_THREAD_RETURN_TYPE unsafe_function(EZ_THREAD_PARAMETER_TYPE params) {
 	Params* p = (Params*)params;
 	EZ_LOCK_MUTEX(p->mutex);
 	*(p->sum) = *(p->sum) + 1;
 	EZ_RELEASE_MUTEX(p->mutex);
-	return NULL;
+	return 0;
 }
 
 int main() {

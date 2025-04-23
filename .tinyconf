@@ -2,3 +2,5 @@ PROJECT test
 MAIN main.c
 INCLUDE include
 SOURCE include
+WINDOWS LINK winpthread
+WINDOWS LINK ws2_32
