@@ -31,7 +31,7 @@ if "%1"=="-p" (
 if "%2"=="-p" (
     set PROD=-prod
 )
-"./build/tiny_windows.exe" -a %PROD%
+"./build/tiny_windows.exe" %PROD%
 if !ERRORLEVEL! NEQ 0 (
     exit /b !ERRORLEVEL!
 )
