@@ -7,14 +7,19 @@
 
 typedef pthread_t EZ_THREAD;
 typedef pthread_mutex_t EZ_MUTEX;
+typedef pthread_cond_t EZ_COND;
 
 #define EZ_THREAD_RETURN_TYPE void*
 #define EZ_THREAD_PARAMETER_TYPE void*
 #define EZ_CREATE_THREAD(thread, func, parameters) pthread_create(&thread, NULL, (void* (*)(void*))func, parameters)
 #define EZ_WAIT_THREAD(thread) pthread_join(thread, NULL)
-#define EZ_CREATE_MUTEX(mutex) pthread_mutex_init(&mutex, NULL)
+#define EZ_CREATE_MUTEX(mutex) { mutex = PTHREAD_MUTEX_INITIALIZER; }
 #define EZ_LOCK_MUTEX(mutex) pthread_mutex_lock(&mutex)
 #define EZ_RELEASE_MUTEX(mutex) pthread_mutex_unlock(&mutex)
+#define EZ_CREATE_COND(cond) { cond = PTHREAD_COND_INITIALIZER; }
+#define EZ_WAIT_COND(cond, mutex) pthread_cond_wait(&mutex, &cond)
+#define EZ_SIGNAL_COND(cond) pthread_cond_signal(&cond)
+#define EZ_BROADCAST_COND(cond) pthread_cond_broadcast(&cond)
 
 #elif _WIN32
 
@@ -61,15 +66,20 @@ typedef pthread_mutex_t EZ_MUTEX;
 #include <windows.h>
 
 typedef HANDLE EZ_THREAD;
-typedef HANDLE EZ_MUTEX;
+typedef CRITICAL_SECTION EZ_MUTEX;
+typedef CONDITION_VARIABLE EZ_COND;
 
 #define EZ_THREAD_RETURN_TYPE DWORD WINAPI
 #define EZ_THREAD_PARAMETER_TYPE LPVOID
 #define EZ_CREATE_THREAD(thread, func, parameters) { thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)func, (LPVOID)parameters, 0, NULL); }
 #define EZ_WAIT_THREAD(thread) WaitForSingleObject(thread, INFINITE)
-#define EZ_CREATE_MUTEX(mutex) { mutex = CreateMutex(NULL, FALSE, NULL); }
-#define EZ_LOCK_MUTEX(mutex) WaitForSingleObject(mutex, INFINITE)
-#define EZ_RELEASE_MUTEX(mutex) ReleaseMutex(mutex)
+#define EZ_CREATE_MUTEX(mutex) InitializeCriticalSection(&mutex);
+#define EZ_LOCK_MUTEX(mutex) EnterCriticalSection(&mutex)
+#define EZ_RELEASE_MUTEX(mutex) LeaveCriticalSection(&mutex)
+#define EZ_CREATE_COND(cond) InitializeConditionVariable(&cond);
+#define EZ_WAIT_COND(cond, mutex) SleepConditionVariableCS(&cond, &mutex, INFINITE);
+#define EZ_SIGNAL_COND(cond) WakeConditionVariable(&cond)
+#define EZ_BROADCAST_COND(cond) WakeAllConditionVariable(&cond)
 
 #else
 #error Unsupported operating system detected!
