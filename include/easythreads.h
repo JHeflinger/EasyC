@@ -13,11 +13,11 @@ typedef pthread_cond_t EZ_COND;
 #define EZ_THREAD_PARAMETER_TYPE void*
 #define EZ_CREATE_THREAD(thread, func, parameters) pthread_create(&thread, NULL, (void* (*)(void*))func, parameters)
 #define EZ_WAIT_THREAD(thread) pthread_join(thread, NULL)
-#define EZ_CREATE_MUTEX(mutex) { mutex = PTHREAD_MUTEX_INITIALIZER; }
+#define EZ_CREATE_MUTEX(mutex) pthread_mutex_init(&mutex, NULL);
 #define EZ_LOCK_MUTEX(mutex) pthread_mutex_lock(&mutex)
 #define EZ_RELEASE_MUTEX(mutex) pthread_mutex_unlock(&mutex)
-#define EZ_CREATE_COND(cond) { cond = PTHREAD_COND_INITIALIZER; }
-#define EZ_WAIT_COND(cond, mutex) pthread_cond_wait(&mutex, &cond)
+#define EZ_CREATE_COND(cond) pthread_cond_init(&cond, NULL);
+#define EZ_WAIT_COND(cond, mutex) pthread_cond_wait(&cond, &mutex)
 #define EZ_SIGNAL_COND(cond) pthread_cond_signal(&cond)
 #define EZ_BROADCAST_COND(cond) pthread_cond_broadcast(&cond)
 
