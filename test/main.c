@@ -173,7 +173,7 @@ EZTEST(list.size == 0, "List clear size");
 	EZ_SERVER_SEND(connection, buf);
 	EZTEST(EZ_CLIENT_RECIEVE(client, retbuf), "Blocking client recieve");
 	EZTEST(memcmp(buf->bytes, retbuf->bytes, buf->max_length) == 0, "Successful byte transfer 4");
-	EZTEST(EZ_CLOSE_CONNETION(connection), "Close connection");
+	EZTEST(EZ_CLOSE_CONNECTION(connection), "Close connection");
 	EZTEST(EZ_DISCONNECT_CLIENT(client), "Disconnect client");
 	EZTEST(EZ_CLOSE_SERVER(server), "Close server");
 	EZTEST(EZ_CLEAN_NETWORK(), "Clean network");

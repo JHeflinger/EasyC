@@ -130,7 +130,7 @@ BOOL ez_server_send(ez_Connection* connection, ez_Buffer* buffer);
 #define EZ_GENERATE_SERVER() ez_generate_server()
 #define EZ_OPEN_SERVER(server, port) ez_open_server(server, port)
 #define EZ_SERVER_ACCEPT(server) ez_server_accept(server)
-#define EZ_CLOSE_CONNETION(connection) ez_close_connection(connection)
+#define EZ_CLOSE_CONNECTION(connection) ez_close_connection(connection)
 #define EZ_CLOSE_SERVER(server) ez_close_server(server)
 #define EZ_CLEAN_SERVER(server) ez_clean_server(server)
 #define EZ_SERVER_ASK(connection, buffer) ez_server_ask(connection, buffer)
