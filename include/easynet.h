@@ -120,6 +120,7 @@ typedef struct {
 ez_Server* ez_generate_server();
 BOOL ez_open_server(ez_Server* server, uint16_t port);
 ez_Connection* ez_server_accept(ez_Server* server);
+ez_Connection* ez_server_accept_timed(ez_Server* server, size_t timeout);
 BOOL ez_close_connection(ez_Connection* connection);
 BOOL ez_close_server(ez_Server* server);
 BOOL ez_clean_server(ez_Server* server);
@@ -130,6 +131,7 @@ BOOL ez_server_send(ez_Connection* connection, ez_Buffer* buffer);
 #define EZ_GENERATE_SERVER() ez_generate_server()
 #define EZ_OPEN_SERVER(server, port) ez_open_server(server, port)
 #define EZ_SERVER_ACCEPT(server) ez_server_accept(server)
+#define EZ_SERVER_ACCEPT_TIMED(server, timeout) ez_server_accept_timed(server, timeout)
 #define EZ_CLOSE_CONNECTION(connection) ez_close_connection(connection)
 #define EZ_CLOSE_SERVER(server) ez_close_server(server)
 #define EZ_CLEAN_SERVER(server) ez_clean_server(server)

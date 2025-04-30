@@ -193,6 +193,18 @@ ez_Connection* ez_server_accept(ez_Server* server) {
     return connection;
 }
 
+ez_Connection* ez_server_accept_timed(ez_Server* server, size_t timeout) {
+	fd_set readfds;
+	struct timeval tout;
+	FD_ZERO(&readfds);
+	FD_SET(server->socket, &readfds);
+	tout.tv_sec = 0;
+	tout.tv_usec = timeout;
+	int found = select(server->socket + 1, &readfds, NULL, NULL, &tout);
+	if (found <= 0) return NULL;
+	return ez_server_accept(server);
+}
+
 BOOL ez_close_connection(ez_Connection* connection) {
 	if (connection == NULL) {
 		EZ_ERROR("Cannot clean a null pointer");
