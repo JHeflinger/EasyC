@@ -107,9 +107,19 @@ BOOL ez_check_network();
 #define EZ_CHECK_NETWORK() ez_check_network()
 
 typedef struct {
+	uint8_t address[4];
+} Ipv4;
+
+typedef struct {
+	Ipv4 address;
+	uint16_t port;
+} Destination;
+
+typedef struct {
 	uint16_t port;
 	EZ_SOCKET socket;
 	BOOL open;
+	BOOL udp;
 } ez_Server;
 
 typedef struct {
@@ -126,6 +136,9 @@ BOOL ez_close_server(ez_Server* server);
 BOOL ez_clean_server(ez_Server* server);
 BOOL ez_server_ask(ez_Connection* connection, ez_Buffer* buffer);
 BOOL ez_server_recieve(ez_Connection* connection, ez_Buffer* buffer);
+Destination ez_server_recieve_from(ez_Server* server, ez_Buffer* buffer);
+Destination ez_server_recieve_from_timed(ez_Server* server, ez_Buffer* buffer, size_t timeout);
+BOOL ez_server_throw(ez_Server* server, Destination destination, ez_Buffer* buffer);
 BOOL ez_server_send(ez_Connection* connection, ez_Buffer* buffer);
 
 #define EZ_GENERATE_SERVER() ez_generate_server()
@@ -137,11 +150,10 @@ BOOL ez_server_send(ez_Connection* connection, ez_Buffer* buffer);
 #define EZ_CLEAN_SERVER(server) ez_clean_server(server)
 #define EZ_SERVER_ASK(connection, buffer) ez_server_ask(connection, buffer)
 #define EZ_SERVER_RECIEVE(connection, buffer) ez_server_recieve(connection, buffer)
+#define EZ_SERVER_RECIEVE_FROM(server, buffer) ez_server_recieve_from(server, buffer)
+#define EZ_SERVER_RECIEVE_FROM_TIMED(server, buffer, timeout) ez_server_recieve_from_timed(server, buffer, timeout)
+#define EZ_SERVER_THROW(server, destination, buffer) ez_server_throw(server, destination, buffer)
 #define EZ_SERVER_SEND(connection, buffer) ez_server_send(connection, buffer)
-
-typedef struct {
-	uint8_t address[4];
-} Ipv4;
 
 typedef struct {
 	Ipv4 address;

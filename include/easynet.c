@@ -111,6 +111,7 @@ ez_Server* ez_generate_server() {
 	server->port = 0;
 	server->socket = EZ_INVALID_SOCK;
 	server->open = FALSE;
+	server->udp = FALSE;
 	if (s_ez_server_list == NULL) {
 		s_ez_server_list = EZ_ALLOC(1, sizeof(ez_ServerList));
 		s_ez_server_list->server = server;
@@ -135,7 +136,11 @@ BOOL ez_open_server(ez_Server* server, uint16_t port) {
 		return FALSE;
 	}
 	server->port = port;
-	server->socket = socket(AF_INET, SOCK_STREAM, 0);
+	if (server->udp) {
+		server->socket = socket(AF_INET, SOCK_DGRAM, 0);
+	} else {
+		server->socket = socket(AF_INET, SOCK_STREAM, 0);
+	}
 	if (server->socket == EZ_INVALID_SOCK) {
 		EZ_ERROR("Unable to create a new socket");
 		return FALSE;
@@ -150,13 +155,13 @@ BOOL ez_open_server(ez_Server* server, uint16_t port) {
 	memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
-   serverAddr.sin_port = htons((u_short)(server->port));
+    serverAddr.sin_port = htons((u_short)(server->port));
     if (bind(server->socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == (int)EZ_INVALID_SOCK) {
         EZ_ERROR("Unable to bind server socket");
         EZ_CLOSE_SOCKET(server->socket);
         return FALSE;
     }
-    if (listen(server->socket, (SOMAXCONN) == EZ_INVALID_SOCK)) {
+    if ((!server->udp) && listen(server->socket, (SOMAXCONN) == EZ_INVALID_SOCK)) {
         EZ_ERROR("Unable to listen for connections");
         EZ_CLOSE_SOCKET(server->socket);
         return FALSE;
@@ -311,6 +316,55 @@ BOOL ez_server_recieve(ez_Connection* connection, ez_Buffer* buffer) {
     }
 	if (retval == 0) return FALSE;
     buffer->current_length = (size_t)retval;
+	return TRUE;
+}
+
+Destination ez_server_recieve_from(ez_Server* server, ez_Buffer* buffer) {
+	struct sockaddr_in client_addr;
+	socklen_t addr_len = sizeof(client_addr);
+	Destination dest = { 0 };
+	int recieved = recvfrom(server->socket, (char*)buffer->bytes, buffer->max_length, 0,
+		(struct sockaddr*)&client_addr, &addr_len);
+	if (recieved < 0) {
+		EZ_WARN("An error occured while recieving data");
+		return dest;
+	}
+	buffer->current_length = (size_t)recieved;
+	dest.port = ntohs(client_addr.sin_port);
+	memcpy(dest.address.address, &client_addr.sin_addr.s_addr, 4);
+	return dest;
+}
+
+Destination ez_server_recieve_from_timed(ez_Server* server, ez_Buffer* buffer, size_t timeout) {
+	fd_set readfds;
+	struct timeval tout;
+	FD_ZERO(&readfds);
+	FD_SET(server->socket, &readfds);
+	tout.tv_sec = 0;
+	tout.tv_usec = timeout;
+	int found = select(server->socket + 1, &readfds, NULL, NULL, &tout);
+	if (found <= 0) {
+		Destination dest = { 0 };
+		return dest;
+	}
+	return ez_server_recieve_from(server, buffer);
+}
+
+BOOL ez_server_throw(ez_Server* server, Destination destination, ez_Buffer* buffer) {
+	struct sockaddr_in dest_addr;
+	memset(&dest_addr, 0, sizeof(dest_addr));
+	dest_addr.sin_family = AF_INET;
+	dest_addr.sin_port = htons(destination.port);
+	memcpy(&dest_addr.sin_addr.s_addr, destination.address.address, 4);
+	char prev = buffer->bytes[buffer->current_length];
+	buffer->bytes[buffer->current_length] = '\0';
+	ssize_t sent = sendto(server->socket, (char*)buffer->bytes, buffer->current_length, 0,
+		(struct sockaddr*)&dest_addr, sizeof(dest_addr));
+	buffer->bytes[buffer->current_length] = prev;
+	if (sent < 0) {
+		EZ_WARN("An error occured while sending data");
+		return FALSE;
+	}
 	return TRUE;
 }
 
