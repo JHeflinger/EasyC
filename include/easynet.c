@@ -137,35 +137,69 @@ BOOL ez_open_server(ez_Server* server, uint16_t port) {
 	}
 	server->port = port;
 	if (server->udp) {
-		server->socket = socket(AF_INET, SOCK_DGRAM, 0);
+		struct addrinfo hints, *res, *p;
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_DGRAM;
+		hints.ai_flags = AI_PASSIVE;
+		char portbuf[32] = { 0 };
+		sprintf(portbuf, "%d", (int)server->port);
+		int status;
+		if ((status = getaddrinfo(NULL, portbuf, &hints, &res)) != 0) {
+			EZ_ERROR("Unable to get address info %d", status);
+			return FALSE;
+		}
+		for (p = res; p != NULL; p = p->ai_next) {
+			if ((server->socket = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == EZ_INVALID_SOCK) {
+				EZ_WARN("Bad server socket detected");
+				continue;
+			}
+			EZ_OPT_TYPE optval = 1;
+			if (setsockopt(server->socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
+				EZ_ERROR("Unable to set server socket options");
+				EZ_CLOSE_SOCKET(server->socket);
+				return FALSE;
+			}
+			if (bind(server->socket, p->ai_addr, p->ai_addrlen) == (int)EZ_INVALID_SOCK) {
+				EZ_ERROR("Unable to bind server socket");
+				EZ_CLOSE_SOCKET(server->socket);
+				return FALSE;
+			}
+			break;
+		}
+		if (p == NULL) {
+			EZ_ERROR("Unable to find viable server socket");
+			return FALSE;
+		}
+		freeaddrinfo(res);
 	} else {
 		server->socket = socket(AF_INET, SOCK_STREAM, 0);
+		if (server->socket == EZ_INVALID_SOCK) {
+			EZ_ERROR("Unable to create a new socket");
+			return FALSE;
+		}
+		EZ_OPT_TYPE optval = 1;
+		if (setsockopt(server->socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
+			EZ_ERROR("Unable to set server socket options");
+			EZ_CLOSE_SOCKET(server->socket);
+			return FALSE;
+		}
+		struct sockaddr_in serverAddr;
+		memset(&serverAddr, 0, sizeof(serverAddr));
+		serverAddr.sin_family = AF_INET;
+		serverAddr.sin_addr.s_addr = INADDR_ANY;
+		serverAddr.sin_port = htons((u_short)(server->port));
+		if (bind(server->socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == (int)EZ_INVALID_SOCK) {
+			EZ_ERROR("Unable to bind server socket");
+			EZ_CLOSE_SOCKET(server->socket);
+			return FALSE;
+		}
+		if (listen(server->socket, (SOMAXCONN) == EZ_INVALID_SOCK)) {
+			EZ_ERROR("Unable to listen for connections");
+			EZ_CLOSE_SOCKET(server->socket);
+			return FALSE;
+		}
 	}
-	if (server->socket == EZ_INVALID_SOCK) {
-		EZ_ERROR("Unable to create a new socket");
-		return FALSE;
-	}
-	EZ_OPT_TYPE optval = 1;
-    if (setsockopt(server->socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
-        EZ_ERROR("Unable to set server socket options");
-        EZ_CLOSE_SOCKET(server->socket);
-		return FALSE;
-    }
-    struct sockaddr_in serverAddr;
-	memset(&serverAddr, 0, sizeof(serverAddr));
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = INADDR_ANY;
-    serverAddr.sin_port = htons((u_short)(server->port));
-    if (bind(server->socket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == (int)EZ_INVALID_SOCK) {
-        EZ_ERROR("Unable to bind server socket");
-        EZ_CLOSE_SOCKET(server->socket);
-        return FALSE;
-    }
-    if ((!server->udp) && listen(server->socket, (SOMAXCONN) == EZ_INVALID_SOCK)) {
-        EZ_ERROR("Unable to listen for connections");
-        EZ_CLOSE_SOCKET(server->socket);
-        return FALSE;
-    }
     server->open = TRUE;
 	return TRUE;
 }
