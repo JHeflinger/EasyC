@@ -185,6 +185,12 @@ BOOL ez_open_server(ez_Server* server, uint16_t port) {
 				EZ_CLOSE_SOCKET(server->socket);
 				return FALSE;
 			}
+			optval = IP_PMTUDISC_DO;
+			if (setsockopt(server->socket, IPPROTO_IP, IP_MTU_DISCOVER, &optval, sizeof(optval)) < 0) {
+				EZ_ERROR("Unable to set server socket options");
+				EZ_CLOSE_SOCKET(server->socket);
+				return FALSE;
+			}
 			if (bind(server->socket, p->ai_addr, p->ai_addrlen) == (int)EZ_INVALID_SOCK) {
 				EZ_ERROR("Unable to bind server socket");
 				EZ_CLOSE_SOCKET(server->socket);
