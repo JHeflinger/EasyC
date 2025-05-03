@@ -38,6 +38,7 @@ typedef struct { \
 } ARRLIST_##T; \
 \
 void ARRLIST_##T##_add(ARRLIST_##T* list, T element); \
+void ARRLIST_##T##_insert(ARRLIST_##T* list, T element, size_t index); \
 int ARRLIST_##T##_has(ARRLIST_##T* list, T element); \
 void ARRLIST_##T##_remove(ARRLIST_##T* list, size_t index); \
 T ARRLIST_##T##_get(ARRLIST_##T* list, size_t index); \
@@ -61,6 +62,25 @@ void ARRLIST_##T##_add(ARRLIST_##T* list, T element) { \
 		list->data = newdata; \
 		memcpy(&(list->data[list->size]), &element, sizeof(T)); \
 		list->size++; \
+	} \
+} \
+\
+void ARRLIST_##T##_insert(ARRLIST_##T* list, T element, size_t index) { \
+	if (index > list->size) { \
+		EZ_FATAL("Invalid arraylist index to insert"); \
+	} else if (index == list->size) { \
+		ARRLIST_##T##_add(list, element); \
+	} else { \
+		ARRLIST_##T##_add(list, element); \
+		for (size_t i = list->size; i > 0; i--) { \
+			size_t ind = i - 1; \
+			if (ind == index) { \
+				memcpy(&(list->data[ind]), &element, sizeof(T)); \
+				break; \
+			} else { \
+				memcpy(&(list->data[ind]), &(list->data[ind - 1]), sizeof(T)); \
+			} \
+		} \
 	} \
 } \
 \
@@ -104,6 +124,7 @@ typedef struct { \
 } ARRLIST_##name; \
 \
 void ARRLIST_##name##_add(ARRLIST_##name* list, T element); \
+void ARRLIST_##name##_insert(ARRLIST_##name* list, T element, size_t index); \
 int ARRLIST_##name##_has(ARRLIST_##name* list, T element); \
 void ARRLIST_##name##_remove(ARRLIST_##name* list, size_t index); \
 T ARRLIST_##name##_get(ARRLIST_##name* list, size_t index); \
@@ -127,6 +148,25 @@ void ARRLIST_##name##_add(ARRLIST_##name* list, T element) { \
 		list->data = newdata; \
 		memcpy(&(list->data[list->size]), &element, sizeof(T)); \
 		list->size++; \
+	} \
+} \
+\
+void ARRLIST_##name##_insert(ARRLIST_##name* list, T element, size_t index) { \
+	if (index > list->size) { \
+		EZ_FATAL("Invalid arraylist index to insert"); \
+	} else if (index == list->size) { \
+		ARRLIST_##name##_add(list, element); \
+	} else { \
+		ARRLIST_##name##_add(list, element); \
+		for (size_t i = list->size; i > 0; i--) { \
+			size_t ind = i - 1; \
+			if (ind == index) { \
+				memcpy(&(list->data[ind]), &element, sizeof(T)); \
+				break; \
+			} else { \
+				memcpy(&(list->data[ind]), &(list->data[ind - 1]), sizeof(T)); \
+			} \
+		} \
 	} \
 } \
 \

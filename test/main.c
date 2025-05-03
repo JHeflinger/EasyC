@@ -72,10 +72,10 @@ int main() {
 	EZTEST(list.size == 0, "Empty list");
 	EZTEST(list.maxsize == 0, "Empty list capacity");
 	ARRLIST_int_add(&list, 2);
-	ARRLIST_int_add(&list, 4);
 	ARRLIST_int_add(&list, 6);
-	ARRLIST_int_add(&list, 8);
 	ARRLIST_int_add(&list, 10);
+	ARRLIST_int_insert(&list, 4, 1);
+	ARRLIST_int_insert(&list, 8, 3);
 	EZTEST(list.size == 5, "Filled list");
 	EZTEST(list.maxsize == 8, "List capacity");
 	EZTEST(ARRLIST_int_has(&list, 10), "List contains");
@@ -86,7 +86,7 @@ int main() {
 	EZTEST(list.maxsize == 8, "List maintained capacity");
 	EZTEST(ARRLIST_int_get(&list, 2) == 6, "List get");
 	ARRLIST_int_clear(&list);
-EZTEST(list.size == 0, "List clear size");
+	EZTEST(list.size == 0, "List clear size");
 	EZTEST(list.maxsize == 0, "List clear capacity");
 	ARRLIST_intPtr nlist = { 0 };
 	EZTEST(nlist.size == 0, "Empty named list");
