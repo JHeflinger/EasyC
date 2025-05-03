@@ -105,6 +105,31 @@ BOOL ez_check_network() {
 	return TRUE;
 }
 
+Ipv4 ez_get_my_ip() {
+	ez_check_network();
+	Ipv4 ip = { 0 };
+    struct sockaddr_in dest;
+    struct sockaddr_in name;
+    int namelen = sizeof(name);
+	EZ_SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock == EZ_INVALID_SOCK) {
+        EZ_ERROR("Socket creation failed");
+        return ip;
+    }
+    memset(&dest, 0, sizeof(dest));
+    dest.sin_family = AF_INET;
+    dest.sin_port = htons(53);
+    inet_pton(AF_INET, "8.8.8.8", &dest.sin_addr);
+    connect(sock, (struct sockaddr*)&dest, sizeof(dest));
+    if (getsockname(sock, (struct sockaddr*)&name, &namelen) == -1) {
+        EZ_ERROR("Unable to get sock name");
+        return ip;
+	}
+	memcpy(ip.address, &name.sin_addr.s_addr, 4);
+    EZ_CLOSE_SOCKET(sock);
+	return ip;
+}
+
 ez_Server* ez_generate_server() {
 	ez_check_network();
 	ez_Server* server = EZ_ALLOC(1, sizeof(ez_Server));

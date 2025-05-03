@@ -127,6 +127,10 @@ typedef struct {
 	EZ_SOCKET socket;
 } ez_Connection;
 
+Ipv4 ez_get_my_ip();
+
+#define EZ_GET_MY_IP() ez_get_my_ip()
+
 ez_Server* ez_generate_server();
 BOOL ez_open_server(ez_Server* server, uint16_t port);
 ez_Connection* ez_server_accept(ez_Server* server);
