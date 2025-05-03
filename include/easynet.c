@@ -110,7 +110,7 @@ Ipv4 ez_get_my_ip() {
 	Ipv4 ip = { 0 };
     struct sockaddr_in dest;
     struct sockaddr_in name;
-    int namelen = sizeof(name);
+    socklen_t namelen = sizeof(name);
 	EZ_SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock == EZ_INVALID_SOCK) {
         EZ_ERROR("Socket creation failed");
