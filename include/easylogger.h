@@ -1,11 +1,6 @@
 #ifndef EASYLOGGER_H
 #define EASYLOGGER_H
 
-#ifndef PROD_BUILD
-
-#include <stdio.h>
-#include <stdlib.h>
-
 #define EZ_RESET "\033[0m"
 #define EZ_RED "\033[31m"
 #define EZ_BLUE "\033[34m"
@@ -13,6 +8,11 @@
 #define EZ_YELLOW "\033[33m"
 #define EZ_PURPLE "\033[35m"
 #define EZ_CYAN "\033[36m"
+
+#ifndef PROD_BUILD
+
+#include <stdio.h>
+#include <stdlib.h>
 
 #define EZ_INFO(...)  {printf("%s[INFO]%s  ", EZ_GREEN, EZ_RESET);  printf(__VA_ARGS__); printf("\n");}
 #define EZ_ERROR(...) {printf("%s[ERROR]%s Error detected in %s:%d - \"", EZ_RED, EZ_RESET, __FILE__, __LINE__); printf(__VA_ARGS__); printf("\"\n");}
