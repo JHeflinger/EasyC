@@ -26,6 +26,7 @@
 #else
 
 #define EZ_INFO(...) ((void) 0)
+#define EZ_ERROR(...) ((void) 0)
 #define EZ_FATAL(...) ((void) 0)
 #define EZ_WARN(...) ((void) 0)
 #define EZ_DEBUG(...) ((void) 0)
