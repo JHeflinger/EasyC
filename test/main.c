@@ -13,8 +13,6 @@ int total_tests = 0;
 	} \
 }
 
-DECLARE_ARRLIST(int);
-IMPL_ARRLIST(int);
 DECLARE_ARRLIST_NAMED(intPtr, int*);
 IMPL_ARRLIST_NAMED(intPtr, int*);
 
