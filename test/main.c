@@ -1,4 +1,5 @@
 #include <easyc.h>
+#include <math.h>
 
 int passed_tests = 0;
 int total_tests = 0;
@@ -183,6 +184,9 @@ int main() {
 	EZTEST(EZ_CLAMP(-99, -60, 100) == -60, "EasyMath clamp to min");
 	EZTEST(EZ_CLAMP(999.0, 0.0, 100.0) == 100.0, "EasyMath clamp to max");
 	EZTEST(EZ_CLAMP(100.0f, 0.0f, 200.0f) == 100.0f, "EasyMath clamp to none");
+	EZTEST(EZ_DISTANCE(0, 25, 0, 0) == 25.0f, "EasyMath distance 1D");
+	EZTEST(EZ_DISTANCE(3, 3, -3, -3) == (float)sqrt(72), "EasyMath distance square");
+	EZTEST(EZ_DISTANCE(1, 10, 3, 4) == (float)sqrt(40), "EasyMath distance 2D");
 
 	printf("\nTest suite results: %s%d%s/%d tests passed\n", 
 		passed_tests == total_tests ? EZ_GREEN : EZ_RED, passed_tests, EZ_RESET, total_tests);

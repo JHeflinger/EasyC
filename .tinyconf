@@ -2,3 +2,4 @@ PROJECT include
 MAIN test/main.c
 WINDOWS LINK winpthread
 WINDOWS LINK ws2_32
+LINK m
