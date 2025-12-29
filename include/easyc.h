@@ -7,5 +7,6 @@
 #include "easythreads.h"
 #include "easynet.h"
 #include "easybasics.h"
+#include "easymath.h"
 
 #endif

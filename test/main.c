@@ -179,6 +179,11 @@ int main() {
 	EZ_CLEAN_BUFFER(retbuf);
 	EZTEST(en_allocated == EZ_ALLOCATED(), "EasyNet memory leak");
 
+	// easymath tests
+	EZTEST(EZ_CLAMP(-99, -60, 100) == -60, "EasyMath clamp to min");
+	EZTEST(EZ_CLAMP(999.0, 0.0, 100.0) == 100.0, "EasyMath clamp to max");
+	EZTEST(EZ_CLAMP(100.0f, 0.0f, 200.0f) == 100.0f, "EasyMath clamp to none");
+
 	printf("\nTest suite results: %s%d%s/%d tests passed\n", 
 		passed_tests == total_tests ? EZ_GREEN : EZ_RED, passed_tests, EZ_RESET, total_tests);
 	return 0;
