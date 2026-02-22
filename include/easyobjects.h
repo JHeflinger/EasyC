@@ -37,6 +37,7 @@ typedef struct { \
 	T* data; \
 } ARRLIST_##T; \
 \
+void ARRLIST_##T##_zero(ARRLIST_##T* list, size_t size); \
 void ARRLIST_##T##_add(ARRLIST_##T* list, T element); \
 void ARRLIST_##T##_insert(ARRLIST_##T* list, T element, size_t index); \
 int ARRLIST_##T##_has(ARRLIST_##T* list, T element); \
@@ -45,6 +46,13 @@ T ARRLIST_##T##_get(ARRLIST_##T* list, size_t index); \
 void ARRLIST_##T##_clear(ARRLIST_##T* list);
 
 #define IMPL_ARRLIST(T) \
+void ARRLIST_##T##_zero(ARRLIST_##T* list, size_t size) { \
+    ARRLIST_##T##_clear(list); \
+    list->maxsize = size; \
+    list->size = size; \
+    list->data = (T*)EZ_ALLOC(size, sizeof(T)); \
+} \
+\
 void ARRLIST_##T##_add(ARRLIST_##T* list, T element) { \
 	if (list->maxsize == 0) { \
 		list->data = (T*)EZ_ALLOC(1, sizeof(T)); \
@@ -123,6 +131,7 @@ typedef struct { \
 	T* data; \
 } ARRLIST_##name; \
 \
+void ARRLIST_##name##_zero(ARRLIST_##name* list, size_t size); \
 void ARRLIST_##name##_add(ARRLIST_##name* list, T element); \
 void ARRLIST_##name##_insert(ARRLIST_##name* list, T element, size_t index); \
 int ARRLIST_##name##_has(ARRLIST_##name* list, T element); \
@@ -131,6 +140,13 @@ T ARRLIST_##name##_get(ARRLIST_##name* list, size_t index); \
 void ARRLIST_##name##_clear(ARRLIST_##name* list);
 
 #define IMPL_ARRLIST_NAMED(name, T) \
+void ARRLIST_##name##_zero(ARRLIST_##name* list, size_t size) { \
+    ARRLIST_##name##_clear(list); \
+    list->maxsize = size; \
+    list->size = size; \
+    list->data = (T*)EZ_ALLOC(size, sizeof(T)); \
+} \
+\
 void ARRLIST_##name##_add(ARRLIST_##name* list, T element) { \
 	if (list->maxsize == 0) { \
 		list->data = (T*)EZ_ALLOC(1, sizeof(T)); \

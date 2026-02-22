@@ -87,6 +87,15 @@ int main() {
 	ARRLIST_int_clear(&list);
 	EZTEST(list.size == 0, "List clear size");
 	EZTEST(list.maxsize == 0, "List clear capacity");
+    ARRLIST_int_zero(&list, 123456);
+    EZTEST(list.size == 123456, "List zero size");
+    EZTEST(list.maxsize == 123456, "List zero maxsize");
+    int success = 1;
+    for (int i = 0; i < 123456; i++) {
+        if (list.data[i] != 0) success = 0;
+    }
+    EZTEST(success == 1, "List zero zero'd");
+    ARRLIST_int_clear(&list);
 	ARRLIST_intPtr nlist = { 0 };
 	EZTEST(nlist.size == 0, "Empty named list");
 	EZTEST(nlist.maxsize == 0, "Empty named list capacity");
@@ -109,6 +118,15 @@ int main() {
 	ARRLIST_intPtr_clear(&nlist);
 	EZTEST(nlist.size == 0, "Named list clear size");
 	EZTEST(nlist.maxsize == 0, "Named list clear capacity");
+    ARRLIST_intPtr_zero(&nlist, 123456);
+    EZTEST(nlist.size == 123456, "Named list zero size");
+    EZTEST(nlist.maxsize == 123456, "Named list zero maxsize");
+    success = 1;
+    for (int i = 0; i < 123456; i++) {
+        if (nlist.data[i] != NULL) success = 0;
+    }
+    EZTEST(success == 1, "Named list zero zero'd");
+    ARRLIST_intPtr_clear(&nlist);
 	EZTEST(before_eo_tests == EZ_ALLOCATED(), "EasyObjects memory leak");
 	
 	// easythreads tests
