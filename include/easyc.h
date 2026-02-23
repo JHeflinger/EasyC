@@ -8,5 +8,6 @@
 #include "easynet.h"
 #include "easybasics.h"
 #include "easymath.h"
+#include "easyhash.h"
 
 #endif

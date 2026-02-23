@@ -16,6 +16,8 @@ int total_tests = 0;
 
 DECLARE_ARRLIST_NAMED(intPtr, int*);
 IMPL_ARRLIST_NAMED(intPtr, int*);
+DECLARE_HASHMAP(int, char, int2char, ez_hash_int);
+IMPL_HASHMAP(int, char, int2char, ez_hash_int);
 
 typedef struct {
 	int* sum;
@@ -127,6 +129,41 @@ int main() {
     }
     EZTEST(success == 1, "Named list zero zero'd");
     ARRLIST_intPtr_clear(&nlist);
+    HASHMAP_int2char hm = { 0 };
+    EZTEST(hm.size == 0, "Empty hashmap");
+    EZTEST(hm.capacity == 0, "Empty hashmap capacity");
+    HASHMAP_int2char_set(&hm, 99, 'a');
+    HASHMAP_int2char_set(&hm, 69, 'b');
+    HASHMAP_int2char_set(&hm, 67, 'c');
+    HASHMAP_int2char_set(&hm, 21, 'd');
+    EZTEST(hm.size == 4, "Filled hashmap size");
+    EZTEST(hm.capacity == 8, "Filled hashmap capacity");
+    success = 
+        HASHMAP_int2char_has(&hm, 99) &&
+        HASHMAP_int2char_has(&hm, 69) &&
+        HASHMAP_int2char_has(&hm, 67) &&
+        HASHMAP_int2char_has(&hm, 21);
+    EZTEST(success, "Filled hashmap has");
+    success =
+        HASHMAP_int2char_has(&hm, 1) ||
+        HASHMAP_int2char_has(&hm, 98) ||
+        HASHMAP_int2char_has(&hm, 100) ||
+        HASHMAP_int2char_has(&hm, 2);
+    EZTEST(!success, "Filled hashmap (does not) has");
+    EZTEST(HASHMAP_int2char_get(&hm, 99) == 'a', "Filled hashmap get 1");
+    EZTEST(HASHMAP_int2char_get(&hm, 69) == 'b', "Filled hashmap get 2");
+    EZTEST(HASHMAP_int2char_get(&hm, 67) == 'c', "Filled hashmap get 3");
+    EZTEST(HASHMAP_int2char_get(&hm, 21) == 'd', "Filled hashmap get 4");
+    HASHMAP_int2char_remove(&hm, 99);
+    EZTEST(!HASHMAP_int2char_has(&hm, 99), "Filled hashmap remove 1");
+    HASHMAP_int2char_remove(&hm, 69);
+    EZTEST(!HASHMAP_int2char_has(&hm, 69), "Filled hashmap remove 2");
+    HASHMAP_int2char_remove(&hm, 67);
+    EZTEST(!HASHMAP_int2char_has(&hm, 67), "Filled hashmap remove 3");
+    HASHMAP_int2char_remove(&hm, 21);
+    EZTEST(!HASHMAP_int2char_has(&hm, 21), "Filled hashmap remove 4");
+    EZTEST(hm.size == 0, "Cleared out hashmap");
+    HASHMAP_int2char_clear(&hm);
 	EZTEST(before_eo_tests == EZ_ALLOCATED(), "EasyObjects memory leak");
 	
 	// easythreads tests

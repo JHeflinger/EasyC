@@ -3,16 +3,9 @@
 
 #include "easylogger.h"
 #include "easymemory.h"
+#include "easybool.h"
 #include <stdint.h>
 #include <string.h>
-
-#ifndef TRUE
-#define TRUE 1
-#endif 
-
-#ifndef FALSE
-#define FALSE 0
-#endif
 
 // dynamic structs
 #define DECLARE_PAIR(T) \
@@ -216,6 +209,100 @@ void ARRLIST_##name##_clear(ARRLIST_##name* list) { \
 	list->data = NULL; \
 	list->size = 0; \
 	list->maxsize = 0; \
+}
+
+#define DECLARE_HASHMAP(Tkey, Tval, name, hashfunc) \
+typedef struct { \
+    Tkey key; \
+    Tval value; \
+    int used; \
+} HASHENTRY_##name; \
+\
+typedef struct { \
+    HASHENTRY_##name* entries; \
+    size_t capacity; \
+    size_t size; \
+} HASHMAP_##name; \
+\
+void HASHMAP_##name##_set(HASHMAP_##name* map, Tkey key, Tval value); \
+BOOL HASHMAP_##name##_has(HASHMAP_##name* map, Tkey key); \
+Tval HASHMAP_##name##_get(HASHMAP_##name* map, Tkey key); \
+void HASHMAP_##name##_remove(HASHMAP_##name* map, Tkey key); \
+void HASHMAP_##name##_clear(HASHMAP_##name* map);
+
+#define IMPL_HASHMAP(Tkey, Tval, name, hashfunc) \
+void HASHMAP_##name##_set(HASHMAP_##name* map, Tkey key, Tval value) { \
+    if (map->capacity == 0 || ((double)map->size / map->capacity > 0.7)) { \
+        size_t old_capacity = map->capacity; \
+        HASHENTRY_##name* old_entries = map->entries; \
+        map->capacity = map->capacity == 0 ? 2 : map->capacity*2; \
+        map->entries = EZ_ALLOC(map->capacity, sizeof(HASHENTRY_##name)); \
+        map->size = 0; \
+        for (size_t i = 0; i < old_capacity; i++) { \
+            if (old_entries[i].used == 1) { \
+                HASHMAP_##name##_set(map, old_entries[i].key, old_entries[i].value); \
+            } \
+        } \
+        EZ_FREE(old_entries); \
+    } \
+    uint64_t hash = hashfunc(key); \
+    size_t index = hash & (map->capacity - 1); \
+    while (map->entries[index].used == 1 && \
+           map->entries[index].key != key) { \
+        index = (index + 1) & (map->capacity - 1); \
+    } \
+    if (map->entries[index].used != 1) map->size++; \
+    map->entries[index].key = key; \
+    map->entries[index].value = value; \
+    map->entries[index].used = 1; \
+} \
+\
+BOOL HASHMAP_##name##_has(HASHMAP_##name* map, Tkey key) { \
+    uint64_t hash = hashfunc(key); \
+    size_t index = hash & (map->capacity - 1); \
+    while (map->entries[index].used != 0) { \
+        if (map->entries[index].used == 1 && map->entries[index].key == key) { \
+            return TRUE; \
+        } \
+        index = (index + 1) & (map->capacity - 1); \
+    } \
+    return FALSE; \
+} \
+\
+Tval HASHMAP_##name##_get(HASHMAP_##name* map, Tkey key) { \
+    uint64_t hash = hashfunc(key); \
+    size_t index = hash & (map->capacity - 1); \
+    while (map->entries[index].used != 0) { \
+        if (map->entries[index].used == 1 && map->entries[index].key == key) { \
+            return map->entries[index].value; \
+        } \
+        index = (index + 1) & (map->capacity - 1); \
+    } \
+    EZ_FATAL("Could not get a value from a key that does not exist in the hashmap"); \
+    Tval t; \
+    return t; \
+} \
+\
+void HASHMAP_##name##_remove(HASHMAP_##name* map, Tkey key) { \
+    uint64_t hash = hashfunc(key); \
+    size_t index = hash & (map->capacity - 1); \
+    while (map->entries[index].used != 0) { \
+        if (map->entries[index].used == 1 && \
+            map->entries[index].key == key) { \
+            map->entries[index].used = 2; \
+            map->size--; \
+            return; \
+        } \
+        index = (index + 1) & (map->capacity - 1); \
+    } \
+    EZ_FATAL("Could not remove a key that does not exist in the hashmap"); \
+} \
+\
+void HASHMAP_##name##_clear(HASHMAP_##name* map) { \
+    EZ_FREE(map->entries); \
+    map->entries = NULL; \
+    map->size = 0; \
+    map->size = 0; \
 }
 
 #endif
