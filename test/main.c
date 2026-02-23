@@ -154,6 +154,8 @@ int main() {
     EZTEST(HASHMAP_int2char_get(&hm, 69) == 'b', "Filled hashmap get 2");
     EZTEST(HASHMAP_int2char_get(&hm, 67) == 'c', "Filled hashmap get 3");
     EZTEST(HASHMAP_int2char_get(&hm, 21) == 'd', "Filled hashmap get 4");
+    HASHMAP_int2char_set(&hm, 99, 'z');
+    EZTEST(HASHMAP_int2char_get(&hm, 99) == 'z', "Hashmap replace key-value pair");
     HASHMAP_int2char_remove(&hm, 99);
     EZTEST(!HASHMAP_int2char_has(&hm, 99), "Filled hashmap remove 1");
     HASHMAP_int2char_remove(&hm, 69);
