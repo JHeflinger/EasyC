@@ -16,7 +16,7 @@ int total_tests = 0;
 
 DECLARE_ARRLIST_NAMED(intPtr, int*);
 IMPL_ARRLIST_NAMED(intPtr, int*);
-DECLARE_HASHMAP(int, char, int2char, ez_hash_int);
+DECLARE_HASHMAP(int, char, int2char);
 IMPL_HASHMAP(int, char, int2char, ez_hash_int);
 
 typedef struct {

@@ -211,7 +211,7 @@ void ARRLIST_##name##_clear(ARRLIST_##name* list) { \
 	list->maxsize = 0; \
 }
 
-#define DECLARE_HASHMAP(Tkey, Tval, name, hashfunc) \
+#define DECLARE_HASHMAP(Tkey, Tval, name) \
 typedef struct { \
     Tkey key; \
     Tval value; \
