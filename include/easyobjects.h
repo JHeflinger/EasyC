@@ -57,10 +57,7 @@ void ARRLIST_##T##_add(ARRLIST_##T* list, T element) { \
 		list->size++; \
 	} else { \
 		list->maxsize *= 2; \
-		T* newdata = (T*)EZ_ALLOC(list->maxsize, sizeof(T)); \
-		memcpy(newdata, list->data, sizeof(T)*list->size); \
-		EZ_FREE(list->data); \
-		list->data = newdata; \
+        list->data = EZ_REALLOC(list->data, list->maxsize, sizeof(T)); \
 		memcpy(&(list->data[list->size]), &element, sizeof(T)); \
 		list->size++; \
 	} \
@@ -151,10 +148,7 @@ void ARRLIST_##name##_add(ARRLIST_##name* list, T element) { \
 		list->size++; \
 	} else { \
 		list->maxsize *= 2; \
-		T* newdata = (T*)EZ_ALLOC(list->maxsize, sizeof(T)); \
-		memcpy(newdata, list->data, sizeof(T)*list->size); \
-		EZ_FREE(list->data); \
-		list->data = newdata; \
+        list->data = EZ_REALLOC(list->data, list->maxsize, sizeof(T)); \
 		memcpy(&(list->data[list->size]), &element, sizeof(T)); \
 		list->size++; \
 	} \
@@ -306,5 +300,110 @@ void HASHMAP_##name##_clear(HASHMAP_##name* map) { \
     map->size = 0; \
     map->size = 0; \
 }
+
+#define DECLARE_PQUEUE(T) \
+typedef struct { \
+    T value; \
+    float cost; \
+} PQPAIR_##T; \
+\
+typedef struct { \
+    PQPAIR_##T pair; \
+    size_t index; \
+} PQNODE_##T; \
+\
+typedef struct { \
+    PQNODE_##T* list; \
+    PQNODE_##T** refs; \
+    size_t size; \
+    size_t capacity; \
+} PQUEUE_##T; \
+\
+void PQUEUE_##T##_build(PQUEUE_##T* pq, PQPAIR_##T* values, size_t size); \
+void PQUEUE_##T##_swap(PQUEUE_##T* pq, size_t i, size_t j); \
+void PQUEUE_##T##_heapU(PQUEUE_##T* pq, size_t i); \
+void PQUEUE_##T##_heapD(PQUEUE_##T* pq, size_t i); \
+PQNODE##T* PQUEUE_##T##_insert(PQUEUE_##T* pq, T value, float cost); \
+T PQUEUE_##T##_pop(PQUEUE##T* pq); \
+T PQUEUE_##T##_top(PQUEUE##T* pq); \
+void PQUEUE##T##_update(PQUEUE_##T* pq, PQNODE##T* node, float newcost); \
+void PQUEUE##T##_clear(PQUEUE_##T* pq);
+/*
+#define IMPL_PQUEUE(T)
+void PQUEUE_##T##_build(PQUEUE_##T* pq, PQPAIR_##T* values, size_t size) {
+    pq->size = size;
+    pq->capacity = size;
+    pq->list = EZ_ALLOC(size, sizeof(PQNODE_##T));
+    pq->refs = EZ_ALLOC(size, sizeof(PQNODE_##T*));
+    for (size_t i = 0; i < size; i++) {
+        pq->list[i].pair = values[i];
+        pq->list[i].index = i;
+        pq->refs = &(pq->list[i]);
+    }
+    for (int64_t i = (size/2) - 1; i >= 0; i--) {
+        PQUEUE_##T##_heapD(pq, i);
+    }
+}
+
+void PQUEUE_##T##_swap(PQUEUE_##T* pq, size_t i, size_t j) {
+    PQUEUE_##T* tmp = pq->refs[i];
+    pq->refs[i] = pq->refs[j];
+    pq->refs[j] = tmp;
+    pq->refs[i]->index = i;
+    pq->refs[j]->index = j;
+}
+
+void PQUEUE_##T##_heapU(PQUEUE_##T* pq, size_t i) {
+    while (i > 0) {
+        size_t parent = (i - 1) / 2;
+        if (pq->refs[i]->pair.cost >= pq->refs[parent]->pair.cost) break;
+        PQUEUE_##T##_swap(pq, i, parent);
+        i = parent;
+    }
+}
+
+void PQUEUE_##T##_heapD(PQUEUE_##T* pq, size_t i) {
+    while (TRUE) {
+        size_t smallest = i;
+        size_t left = i*2 + 1;
+        size_t right = i*2 + 2;
+        if (left < pq->size && pq->refs[left]->pair.cost < pq->refs[smallest]->pair.cost) smallest = left;
+        if (right < pq->size && pq->refs[right]->pair.cost < pq->refs[smallest]->pair.cost) smallest = right;
+        if (smallest == i) break;
+        PQUEUE_##T##_swap(pq, i, smallest);
+        i = smallest;
+    }
+}
+
+PQNODE##T* PQUEUE_##T##_insert(PQUEUE_##T* pq, T value, float cost) {
+    if (pq->size >= pq->capacity) {
+
+    }
+}
+
+T PQUEUE_##T##_pop(PQUEUE##T* pq) {
+
+}
+
+T PQUEUE_##T##_top(PQUEUE##T* pq) {
+    EZ_ASSERT(pq->size != 0, "Cannot get the top of an empty PriorityQueue");
+    return pq->refs[0]->pair.value;
+}
+
+void PQUEUE##T##_update(PQUEUE_##T* pq, PQNODE##T* node, float newcost) {
+    float oldcost = node->pair.cost;
+    node->pair.cost = newcost;
+    if (newcost < oldcost) PQUEUE_##T##_heapU(pq, node->index);
+    else PQUEUE_##T##_heapD(pq, node->index);
+}
+
+void PQUEUE##T##_clear(PQUEUE_##T* pq) {
+    EZ_FREE(pq->list);
+    EZ_FREE(pq->refs);
+    pq->list = NULL;
+    pq->refs = NULL;
+    pq->size = 0;
+    pq->capacity = 0;
+}*/
 
 #endif
