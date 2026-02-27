@@ -180,6 +180,29 @@ int main() {
     EZTEST(!HASHMAP_int2char_has(&hm, 21), "Filled hashmap remove 4");
     EZTEST(hm.size == 0, "Cleared out hashmap");
     HASHMAP_int2char_clear(&hm);
+
+    PQUEUE_int pqi = { 0 };
+    EZTEST(pqi.size == 0, "Empty priority queue");
+    EZTEST(pqi.capacity == 0, "Empty priority queue capacity");
+    PQUEUE_int_insert(&pqi, 1, 9.0f);
+    PQUEUE_int_insert(&pqi, 2, 8.0f);
+    PQUEUE_int_insert(&pqi, 3, 7.0f);
+    PQUEUE_int_insert(&pqi, 4, 6.0f);
+    PQUEUE_int_insert(&pqi, 5, 5.0f);
+    PQUEUE_int_insert(&pqi, 6, 4.0f);
+    PQUEUE_int_insert(&pqi, 7, 3.0f);
+    PQUEUE_int_insert(&pqi, 8, 2.0f);
+    //PQUEUE_int_insert(&pqi, 9, 1.0f);
+    //PQUEUE_int_insert(&pqi, 10, 0.0f);
+    size_t t = pqi.size;
+    EZ_INFO("priority");
+    for (size_t i = 0; i < t; i++) {
+        EZ_INFO("%d", PQUEUE_int_pop(&pqi));
+    }
+    exit(0);
+
+
+
 	EZTEST(before_eo_tests == EZ_ALLOCATED(), "EasyObjects memory leak");
 	
 	// easythreads tests

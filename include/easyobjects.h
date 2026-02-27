@@ -323,87 +323,106 @@ void PQUEUE_##T##_build(PQUEUE_##T* pq, PQPAIR_##T* values, size_t size); \
 void PQUEUE_##T##_swap(PQUEUE_##T* pq, size_t i, size_t j); \
 void PQUEUE_##T##_heapU(PQUEUE_##T* pq, size_t i); \
 void PQUEUE_##T##_heapD(PQUEUE_##T* pq, size_t i); \
-PQNODE##T* PQUEUE_##T##_insert(PQUEUE_##T* pq, T value, float cost); \
-T PQUEUE_##T##_pop(PQUEUE##T* pq); \
-T PQUEUE_##T##_top(PQUEUE##T* pq); \
-void PQUEUE##T##_update(PQUEUE_##T* pq, PQNODE##T* node, float newcost); \
-void PQUEUE##T##_clear(PQUEUE_##T* pq);
-/*
-#define IMPL_PQUEUE(T)
-void PQUEUE_##T##_build(PQUEUE_##T* pq, PQPAIR_##T* values, size_t size) {
-    pq->size = size;
-    pq->capacity = size;
-    pq->list = EZ_ALLOC(size, sizeof(PQNODE_##T));
-    pq->refs = EZ_ALLOC(size, sizeof(PQNODE_##T*));
-    for (size_t i = 0; i < size; i++) {
-        pq->list[i].pair = values[i];
-        pq->list[i].index = i;
-        pq->refs = &(pq->list[i]);
-    }
-    for (int64_t i = (size/2) - 1; i >= 0; i--) {
-        PQUEUE_##T##_heapD(pq, i);
-    }
+void PQUEUE_##T##_insert(PQUEUE_##T* pq, T value, float cost); \
+T PQUEUE_##T##_pop(PQUEUE_##T* pq); \
+T PQUEUE_##T##_top(PQUEUE_##T* pq); \
+void PQUEUE_##T##_update(PQUEUE_##T* pq, PQNODE_##T* node, float newcost); \
+void PQUEUE_##T##_clear(PQUEUE_##T* pq);
+
+#define IMPL_PQUEUE(T) \
+void PQUEUE_##T##_build(PQUEUE_##T* pq, PQPAIR_##T* values, size_t size) { \
+    pq->size = size; \
+    pq->capacity = size; \
+    pq->list = EZ_ALLOC(size, sizeof(PQNODE_##T)); \
+    pq->refs = EZ_ALLOC(size, sizeof(PQNODE_##T*)); \
+    for (size_t i = 0; i < size; i++) { \
+        pq->list[i].pair = values[i]; \
+        pq->list[i].index = i; \
+        pq->refs[i] = &(pq->list[i]); \
+    } \
+    for (int64_t i = (size/2) - 1; i >= 0; i--) { \
+        PQUEUE_##T##_heapD(pq, i); \
+    } \
+} \
+\
+void PQUEUE_##T##_swap(PQUEUE_##T* pq, size_t i, size_t j) { \
+    PQNODE_##T* tmp = pq->refs[i]; \
+    pq->refs[i] = pq->refs[j]; \
+    pq->refs[j] = tmp; \
+    pq->refs[i]->index = i; \
+    pq->refs[j]->index = j; \
+} \
+\
+void PQUEUE_##T##_heapU(PQUEUE_##T* pq, size_t i) { \
+    while (i > 0) { \
+        size_t parent = (i - 1) / 2; \
+        if (pq->refs[i]->pair.cost >= pq->refs[parent]->pair.cost) break; \
+        PQUEUE_##T##_swap(pq, i, parent); \
+        i = parent; \
+    } \
+} \
+\
+void PQUEUE_##T##_heapD(PQUEUE_##T* pq, size_t i) { \
+    while (TRUE) { \
+        size_t smallest = i; \
+        size_t left = i*2 + 1; \
+        size_t right = i*2 + 2; \
+        if (left < pq->size && pq->refs[left]->pair.cost < pq->refs[smallest]->pair.cost) smallest = left; \
+        if (right < pq->size && pq->refs[right]->pair.cost < pq->refs[smallest]->pair.cost) smallest = right; \
+        if (smallest == i) break; \
+        PQUEUE_##T##_swap(pq, i, smallest); \
+        i = smallest; \
+    } \
+} \
+\
+void PQUEUE_##T##_insert(PQUEUE_##T* pq, T value, float cost) { \
+    if (pq->size >= pq->capacity) { \
+        if (pq->capacity == 0) { \
+            pq->capacity = 1; \
+            pq->list = EZ_ALLOC(1, sizeof(PQNODE_##T)); \
+            pq->refs = EZ_ALLOC(1, sizeof(PQNODE_##T*)); \
+        } \
+        pq->capacity *= 2; \
+        pq->list = EZ_REALLOC(pq->list, pq->capacity, sizeof(PQNODE_##T)); \
+        pq->refs = EZ_REALLOC(pq->refs, pq->capacity, sizeof(PQNODE_##T*)); \
+    } \
+    pq->list[pq->size] = (PQNODE_##T){(PQPAIR_##T){ value, cost }, pq->size}; \
+    pq->refs[pq->size] = &(pq->list[pq->size]); \
+    pq->size++; \
+    PQUEUE_##T##_heapU(pq, pq->size - 1); \
+} \
+\
+T PQUEUE_##T##_pop(PQUEUE_##T* pq) { \
+    EZ_ASSERT(pq->size != 0, "Cannot pop off an empty PriorityQueue"); \
+    T val = pq->refs[0]->pair.value; \
+    pq->size--; \
+    if (pq->size > 0) { \
+        pq->refs[0] = pq->refs[pq->size]; \
+        pq->refs[0]->index = 0; \
+        PQUEUE_##T##_heapD(pq, 0); \
+    } \
+    return val; \
+} \
+\
+T PQUEUE_##T##_top(PQUEUE_##T* pq) { \
+    EZ_ASSERT(pq->size != 0, "Cannot get the top of an empty PriorityQueue"); \
+    return pq->refs[0]->pair.value; \
+} \
+\
+void PQUEUE_##T##_update(PQUEUE_##T* pq, PQNODE_##T* node, float newcost) { \
+    float oldcost = node->pair.cost; \
+    node->pair.cost = newcost; \
+    if (newcost < oldcost) PQUEUE_##T##_heapU(pq, node->index); \
+    else PQUEUE_##T##_heapD(pq, node->index); \
+} \
+\
+void PQUEUE_##T##_clear(PQUEUE_##T* pq) { \
+    EZ_FREE(pq->list); \
+    EZ_FREE(pq->refs); \
+    pq->list = NULL; \
+    pq->refs = NULL; \
+    pq->size = 0; \
+    pq->capacity = 0; \
 }
-
-void PQUEUE_##T##_swap(PQUEUE_##T* pq, size_t i, size_t j) {
-    PQUEUE_##T* tmp = pq->refs[i];
-    pq->refs[i] = pq->refs[j];
-    pq->refs[j] = tmp;
-    pq->refs[i]->index = i;
-    pq->refs[j]->index = j;
-}
-
-void PQUEUE_##T##_heapU(PQUEUE_##T* pq, size_t i) {
-    while (i > 0) {
-        size_t parent = (i - 1) / 2;
-        if (pq->refs[i]->pair.cost >= pq->refs[parent]->pair.cost) break;
-        PQUEUE_##T##_swap(pq, i, parent);
-        i = parent;
-    }
-}
-
-void PQUEUE_##T##_heapD(PQUEUE_##T* pq, size_t i) {
-    while (TRUE) {
-        size_t smallest = i;
-        size_t left = i*2 + 1;
-        size_t right = i*2 + 2;
-        if (left < pq->size && pq->refs[left]->pair.cost < pq->refs[smallest]->pair.cost) smallest = left;
-        if (right < pq->size && pq->refs[right]->pair.cost < pq->refs[smallest]->pair.cost) smallest = right;
-        if (smallest == i) break;
-        PQUEUE_##T##_swap(pq, i, smallest);
-        i = smallest;
-    }
-}
-
-PQNODE##T* PQUEUE_##T##_insert(PQUEUE_##T* pq, T value, float cost) {
-    if (pq->size >= pq->capacity) {
-
-    }
-}
-
-T PQUEUE_##T##_pop(PQUEUE##T* pq) {
-
-}
-
-T PQUEUE_##T##_top(PQUEUE##T* pq) {
-    EZ_ASSERT(pq->size != 0, "Cannot get the top of an empty PriorityQueue");
-    return pq->refs[0]->pair.value;
-}
-
-void PQUEUE##T##_update(PQUEUE_##T* pq, PQNODE##T* node, float newcost) {
-    float oldcost = node->pair.cost;
-    node->pair.cost = newcost;
-    if (newcost < oldcost) PQUEUE_##T##_heapU(pq, node->index);
-    else PQUEUE_##T##_heapD(pq, node->index);
-}
-
-void PQUEUE##T##_clear(PQUEUE_##T* pq) {
-    EZ_FREE(pq->list);
-    EZ_FREE(pq->refs);
-    pq->list = NULL;
-    pq->refs = NULL;
-    pq->size = 0;
-    pq->capacity = 0;
-}*/
 
 #endif
