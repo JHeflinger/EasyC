@@ -180,7 +180,6 @@ int main() {
     EZTEST(!HASHMAP_int2char_has(&hm, 21), "Filled hashmap remove 4");
     EZTEST(hm.size == 0, "Cleared out hashmap");
     HASHMAP_int2char_clear(&hm);
-
     PQUEUE_int pqi = { 0 };
     EZTEST(pqi.size == 0, "Empty priority queue");
     EZTEST(pqi.capacity == 0, "Empty priority queue capacity");
@@ -192,17 +191,51 @@ int main() {
     PQUEUE_int_insert(&pqi, 6, 4.0f);
     PQUEUE_int_insert(&pqi, 7, 3.0f);
     PQUEUE_int_insert(&pqi, 8, 2.0f);
-    //PQUEUE_int_insert(&pqi, 9, 1.0f);
-    //PQUEUE_int_insert(&pqi, 10, 0.0f);
+    PQUEUE_int_insert(&pqi, 9, 1.0f);
+    PQUEUE_int_insert(&pqi, 10, 0.0f);
+    EZTEST(pqi.size == 10, "Filled priority queue size");
+    EZTEST(pqi.capacity == 16, "Filled priority queue capacity");
     size_t t = pqi.size;
-    EZ_INFO("priority");
+    int curr = 10;
+    int topv = 1;
     for (size_t i = 0; i < t; i++) {
-        EZ_INFO("%d", PQUEUE_int_pop(&pqi));
+        topv |= (PQUEUE_int_top(&pqi) == curr);
+        int new = PQUEUE_int_pop(&pqi);
+        if (new != curr) {
+            curr = -1;
+            break;
+        }
+        curr--;
     }
-    exit(0);
-
-
-
+    EZTEST(topv, "Priority queue top");
+    EZTEST(curr == 0, "Priority queue insert and pop");
+    EZTEST(pqi.size == 0, "Popped out priority queue size");
+    PQUEUE_int_clear(&pqi);
+    PQPAIR_int buildarr[] = {
+        {92, 8.0f}, {98, 2.0f}, {90, 10.0f}, {94, 6.0f}, {97, 3.0f},
+        {96, 4.0f}, {93, 7.0f}, {99, 1.0f}, {91, 9.0f}, {95, 5.0f}
+    };
+    int verifyarr[] = { 93, 94, 91, 99, 98, 97, 96, 95, 92, 90 };
+    PQUEUE_int_build(&pqi, buildarr, 10);
+    EZTEST(pqi.size == 10, "Built priority queue size");
+    EZTEST(pqi.capacity == 10, "Built priority queue capacity");
+    success = 1;
+    for (size_t i = 0; i < pqi.size; i++)
+        success &= PQUEUE_int_pop(&pqi) == 99 - (int)i;
+    EZTEST(success, "Built priority queue order");
+    PQUEUE_int_clear(&pqi);
+    EZTEST(pqi.size == 0, "Cleared priority queue size");
+    EZTEST(pqi.capacity == 0, "Cleared priority queue capacity");
+    PQUEUE_int_build(&pqi, buildarr, 10);
+    PQUEUE_int_update(&pqi, 3, -99.0f);
+    PQUEUE_int_update(&pqi, 6, -99.001f);
+    PQUEUE_int_update(&pqi, 8, -11.9f);
+    size_t pqisize = pqi.size;
+    success = 1;
+    for (size_t i = 0; i < pqisize; i++)
+        success &= PQUEUE_int_pop(&pqi) == verifyarr[i];
+    EZTEST(success, "Update priority queue");
+    PQUEUE_int_clear(&pqi);
 	EZTEST(before_eo_tests == EZ_ALLOCATED(), "EasyObjects memory leak");
 	
 	// easythreads tests
