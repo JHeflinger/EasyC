@@ -410,7 +410,7 @@ T PQUEUE_##T##_top(PQUEUE_##T* pq) { \
 } \
 \
 void PQUEUE_##T##_update(PQUEUE_##T* pq, size_t index, float newcost) { \
-    EZ_ASSERT(index < pq->size, "Cannot update an element that does not exist in the PriorityQueue"); \
+    EZ_ASSERT(pq->list[index].index < pq->size && index < pq->capacity, "Cannot update an element that does not exist in the PriorityQueue"); \
     float oldcost = pq->list[index].pair.cost; \
     pq->list[index].pair.cost = newcost; \
     if (newcost < oldcost) PQUEUE_##T##_heapU(pq, pq->list[index].index); \
