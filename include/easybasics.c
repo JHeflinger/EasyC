@@ -13,6 +13,8 @@ IMPL_ARRLIST(int16_t);
 IMPL_ARRLIST(uint8_t);
 IMPL_ARRLIST(int8_t);
 
+IMPL_ARRLIST_NAMED(voidPtr, void*);
+
 IMPL_PQUEUE(size_t);
 IMPL_PQUEUE(int);
 IMPL_PQUEUE(float);
