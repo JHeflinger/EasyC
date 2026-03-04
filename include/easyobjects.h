@@ -119,7 +119,7 @@ void ARRLIST_##T##_wipe(ARRLIST_##T* list) { \
 	list->size = 0; \
 }
 
-#define DECLARE_ARRLIST_NO_GET_SUPPORT(T) \
+#define DECLARE_ARR_ARRLIST(T) \
 typedef struct { \
 	size_t size; \
 	size_t maxsize; \
@@ -134,7 +134,7 @@ void ARRLIST_##T##_remove(ARRLIST_##T* list, size_t index); \
 void ARRLIST_##T##_clear(ARRLIST_##T* list); \
 void ARRLIST_##T##_wipe(ARRLIST_##T* list);
 
-#define IMPL_ARRLIST_NO_GET_SUPPORT(T) \
+#define IMPL_ARR_ARRLIST(T) \
 void ARRLIST_##T##_zero(ARRLIST_##T* list, size_t size) { \
     ARRLIST_##T##_clear(list); \
     list->maxsize = size; \
@@ -180,7 +180,7 @@ void ARRLIST_##T##_insert(ARRLIST_##T* list, T element, size_t index) { \
 \
 int ARRLIST_##T##_has(ARRLIST_##T* list, T element) { \
 	for (size_t i = 0; i < list->size; i++) \
-		if (memcmp(&element, &(list->data[i]), sizeof(T)) == 0) return TRUE; \
+		if (memcmp(element, list->data[i], sizeof(T)) == 0) return TRUE; \
 	return FALSE; \
 } \
 \
