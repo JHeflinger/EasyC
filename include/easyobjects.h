@@ -97,7 +97,7 @@ void ARRLIST_##T##_remove(ARRLIST_##T* list, size_t index) { \
 		return; \
 	} \
 	for (size_t i = index; i < list->size - 1; i++) \
-		list->data[i] = list->data[i + 1]; \
+		memcpy(&(list->data[i]), &(list->data[i + 1]), sizeof(T)); \
 	list->size--; \
 } \
 \
@@ -192,7 +192,7 @@ void ARRLIST_##T##_remove(ARRLIST_##T* list, size_t index) { \
 		return; \
 	} \
 	for (size_t i = index; i < list->size - 1; i++) \
-		list->data[i] = list->data[i + 1]; \
+		memcpy(&(list->data[i]), &(list->data[i + 1]), sizeof(T)); \
 	list->size--; \
 } \
 \
@@ -282,7 +282,7 @@ void ARRLIST_##name##_remove(ARRLIST_##name* list, size_t index) { \
 		return; \
 	} \
 	for (size_t i = index; i < list->size - 1; i++) \
-		list->data[i] = list->data[i + 1]; \
+		memcpy(&(list->data[i]), &(list->data[i + 1]), sizeof(T)); \
 	list->size--; \
 } \
 \
