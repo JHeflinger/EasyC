@@ -147,14 +147,14 @@ void ARRLIST_##T##_add(ARRLIST_##T* list, T element) { \
 		list->data = (T*)EZ_ALLOC(1, sizeof(T)); \
 		list->size = 1; \
 		list->maxsize = 1; \
-		memcpy(list->data, &element, sizeof(T)); \
+		memcpy(list->data, element, sizeof(T)); \
 	} else if (list->size < list->maxsize) { \
-		memcpy(&(list->data[list->size]), &element, sizeof(T)); \
+		memcpy(list->data[list->size], element, sizeof(T)); \
 		list->size++; \
 	} else { \
 		list->maxsize *= 2; \
         list->data = EZ_REALLOC(list->data, list->maxsize, sizeof(T)); \
-		memcpy(&(list->data[list->size]), &element, sizeof(T)); \
+		memcpy(list->data[list->size], element, sizeof(T)); \
 		list->size++; \
 	} \
 } \
@@ -169,10 +169,10 @@ void ARRLIST_##T##_insert(ARRLIST_##T* list, T element, size_t index) { \
 		for (size_t i = list->size; i > 0; i--) { \
 			size_t ind = i - 1; \
 			if (ind == index) { \
-				memcpy(&(list->data[ind]), &element, sizeof(T)); \
+				memcpy(list->data[ind], element, sizeof(T)); \
 				break; \
 			} else { \
-				memcpy(&(list->data[ind]), &(list->data[ind - 1]), sizeof(T)); \
+				memcpy(list->data[ind], list->data[ind - 1], sizeof(T)); \
 			} \
 		} \
 	} \
@@ -192,7 +192,7 @@ void ARRLIST_##T##_remove(ARRLIST_##T* list, size_t index) { \
 		return; \
 	} \
 	for (size_t i = index; i < list->size - 1; i++) \
-		memcpy(&(list->data[i]), &(list->data[i + 1]), sizeof(T)); \
+		memcpy(list->data[i], list->data[i + 1], sizeof(T)); \
 	list->size--; \
 } \
 \
