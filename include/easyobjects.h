@@ -398,7 +398,7 @@ void HASHMAP_##name##_clear(HASHMAP_##name* map) { \
     EZ_FREE(map->entries); \
     map->entries = NULL; \
     map->size = 0; \
-    map->size = 0; \
+    map->capacity = 0; \
 }
 
 #define DECLARE_PQUEUE(T) \

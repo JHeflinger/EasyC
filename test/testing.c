@@ -181,6 +181,7 @@ int main() {
     EZTEST(!HASHMAP_int2char_has(&hm, 21), "Filled hashmap remove 4");
     EZTEST(hm.size == 0, "Cleared out hashmap");
     HASHMAP_int2char_clear(&hm);
+    EZTEST(hm.capacity == 0, "Cleared out hashmap capacity");
     PQUEUE_int pqi = { 0 };
     EZTEST(pqi.size == 0, "Empty priority queue");
     EZTEST(pqi.capacity == 0, "Empty priority queue capacity");
