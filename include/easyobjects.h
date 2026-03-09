@@ -315,6 +315,7 @@ typedef struct { \
     HASHENTRY_##name* entries; \
     size_t capacity; \
     size_t size; \
+    size_t tombstones; \
 } HASHMAP_##name; \
 \
 void HASHMAP_##name##_set(HASHMAP_##name* map, Tkey key, Tval value); \
@@ -325,12 +326,13 @@ void HASHMAP_##name##_clear(HASHMAP_##name* map);
 
 #define IMPL_HASHMAP(Tkey, Tval, name, hashfunc) \
 void HASHMAP_##name##_set(HASHMAP_##name* map, Tkey key, Tval value) { \
-    if (map->capacity == 0 || ((double)map->size / map->capacity > 0.7)) { \
+    if (map->capacity == 0 || ((double)(map->size + map->tombstones + 1) / map->capacity > 0.7)) { \
         size_t old_capacity = map->capacity; \
         HASHENTRY_##name* old_entries = map->entries; \
         map->capacity = map->capacity == 0 ? 2 : map->capacity*2; \
         map->entries = EZ_ALLOC(map->capacity, sizeof(HASHENTRY_##name)); \
         map->size = 0; \
+        map->tombstones = 0; \
         for (size_t i = 0; i < old_capacity; i++) { \
             if (old_entries[i].used == 1) { \
                 HASHMAP_##name##_set(map, old_entries[i].key, old_entries[i].value); \
@@ -386,6 +388,7 @@ void HASHMAP_##name##_remove(HASHMAP_##name* map, Tkey key) { \
         if (map->entries[index].used == 1 && \
             memcmp(&(map->entries[index].key), &key, sizeof(Tkey)) == 0) { \
             map->entries[index].used = 2; \
+            map->tombstones++; \
             map->size--; \
             return; \
         } \

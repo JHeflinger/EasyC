@@ -149,6 +149,7 @@ int main() {
     EZTEST(!HASHMAP_int2char_has(&hm, 99), "Empty hashmap has");
     HASHMAP_int2char_set(&hm, 99, 'a');
     HASHMAP_int2char_set(&hm, 69, 'b');
+    EZTEST(!HASHMAP_int2char_has(&hm, 67), "Non-empty hashmap has on non-existent key");
     HASHMAP_int2char_set(&hm, 67, 'c');
     HASHMAP_int2char_set(&hm, 21, 'd');
     EZTEST(hm.size == 4, "Filled hashmap size");
