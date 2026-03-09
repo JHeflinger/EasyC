@@ -351,6 +351,7 @@ void HASHMAP_##name##_set(HASHMAP_##name* map, Tkey key, Tval value) { \
 } \
 \
 BOOL HASHMAP_##name##_has(HASHMAP_##name* map, Tkey key) { \
+    if (map->size == 0) return FALSE; \
     uint64_t hash = hashfunc(key); \
     size_t index = hash & (map->capacity - 1); \
     while (map->entries[index].used != 0) { \

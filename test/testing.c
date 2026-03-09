@@ -146,6 +146,7 @@ int main() {
     HASHMAP_int2char hm = { 0 };
     EZTEST(hm.size == 0, "Empty hashmap");
     EZTEST(hm.capacity == 0, "Empty hashmap capacity");
+    EZTEST(!HASHMAP_int2char_has(&hm, 99), "Empty hashmap has");
     HASHMAP_int2char_set(&hm, 99, 'a');
     HASHMAP_int2char_set(&hm, 69, 'b');
     HASHMAP_int2char_set(&hm, 67, 'c');
