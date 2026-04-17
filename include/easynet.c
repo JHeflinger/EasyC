@@ -185,12 +185,14 @@ BOOL ez_open_server(ez_Server* server, uint16_t port) {
 				EZ_CLOSE_SOCKET(server->socket);
 				return FALSE;
 			}
+            #ifdef __linux__
 			optval = IP_PMTUDISC_DO;
 			if (setsockopt(server->socket, IPPROTO_IP, IP_MTU_DISCOVER, &optval, sizeof(optval)) < 0) {
 				EZ_ERROR("Unable to set server socket options");
 				EZ_CLOSE_SOCKET(server->socket);
 				return FALSE;
 			}
+            #endif
 			if (bind(server->socket, p->ai_addr, p->ai_addrlen) == (int)EZ_INVALID_SOCK) {
 				EZ_ERROR("Unable to bind server socket");
 				EZ_CLOSE_SOCKET(server->socket);
@@ -359,8 +361,8 @@ BOOL ez_server_ask(ez_Connection* connection, ez_Buffer* buffer) {
 		return TRUE;
 	}
 	return FALSE;
-    #elif __linux__	
-	ssize_t retval = recv(connection->socket, (char*)buffer->bytes, buffer->max_length, MSG_DONTWAIT);
+    #elif defined(__linux__) || defined(__APPLE__)
+    ssize_t retval = recv(connection->socket, (char*)buffer->bytes, buffer->max_length, MSG_DONTWAIT);
 	if (retval <= 0) {
 		buffer->current_length = 0;
 		return FALSE;
@@ -560,8 +562,8 @@ BOOL ez_client_ask(ez_Client* client, ez_Buffer* buffer) {
 		return TRUE;
 	}
 	return FALSE;
-    #elif __linux__	
-	ssize_t retval = recv(client->socket, (char*)buffer->bytes, buffer->max_length, MSG_DONTWAIT);
+    #elif defined(__linux__) || defined(__APPLE__)
+    ssize_t retval = recv(client->socket, (char*)buffer->bytes, buffer->max_length, MSG_DONTWAIT);
 	if (retval <= 0) {
 		buffer->current_length = 0;
 		return FALSE;
