@@ -59,8 +59,6 @@ BOOL ez_init_network() {
     }
 	s_ez_network_initialized = TRUE;
 	return TRUE;
-	#elifndef __linux__
-	#error "Unsupported operating system detected"
 	#endif
 	s_ez_network_initialized = TRUE;
 	return TRUE;
@@ -69,8 +67,6 @@ BOOL ez_init_network() {
 BOOL ez_clean_network() {
 	#ifdef __WIN32
     WSACleanup();
-	#elifndef __linux__
-	#error "Unsupported operating system detected"
 	#endif
 	while (s_ez_server_list != NULL) {
 		BOOL res = ez_clean_server(s_ez_server_list->server);
