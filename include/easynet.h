@@ -23,7 +23,7 @@ BOOL ez_record_buffer(ez_Buffer* buffer, void* source, size_t sourcesize);
 #define EZ_TRANSLATE_BUFFER(buffer, destination) ez_translate_buffer(buffer, (void*)destination, sizeof(*destination))
 #define EZ_RECORD_BUFFER(buffer, source) ez_record_buffer(buffer, (void*)source, sizeof(*source))
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 
 #include <sys/types.h>
 #include <sys/socket.h>

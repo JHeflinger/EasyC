@@ -343,7 +343,7 @@ void HASHMAP_##name##_set(HASHMAP_##name* map, Tkey key, Tval value) { \
     uint64_t hash = hashfunc(key); \
     size_t index = hash & (map->capacity - 1); \
     while (map->entries[index].used == 1 && \
-           memcmp(&(map->entries[index].key), &key, sizeof(Tkey)) != 0) { \
+        memcmp(&(map->entries[index].key), &key, sizeof(Tkey)) != 0) { \
         index = (index + 1) & (map->capacity - 1); \
     } \
     if (map->entries[index].used != 1) map->size++; \
